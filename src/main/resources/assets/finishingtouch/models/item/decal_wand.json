@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "finishingtouch:items/decal_wand"
+  }
+}
