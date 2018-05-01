@@ -1,7 +1,11 @@
 package com.github.atomicblom.finishingtouch.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ArtistDecal {
+    @SerializedName("Name")
     private String name;
+    @SerializedName("Location")
     private String location;
 
     public String getName() {
