@@ -1,0 +1,21 @@
+[
+  {
+    "Artist": "Rorax",
+    "Site": "http://twitter.com/Rosespikes",
+    "SiteName": "Twitter",
+    "Decals": [
+      {
+        "Name": "Sparse Hay",
+        "Location": "finishingtouch:textures/decals/hay_sparse"
+      },
+      {
+        "Name": "Turn Arrow (new)",
+        "Location": "finishingtouch:textures/decals/turn_arrow_new"
+      },
+      {
+        "Name": "Turn Arrow (dilapidated)",
+        "Location": "finishingtouch:textures/decals/turn_arrow_old"
+      }
+    ]
+  }
+]
