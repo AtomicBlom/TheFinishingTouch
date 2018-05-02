@@ -1,10 +1,7 @@
 package com.github.atomicblom.finishingtouch;
 
 import com.github.atomicblom.finishingtouch.handlers.GuiHandler;
-import com.github.atomicblom.finishingtouch.network.AddDecalMessage;
-import com.github.atomicblom.finishingtouch.network.AddDecalMessageHandler;
-import com.github.atomicblom.finishingtouch.network.NotifyDecalAddedMessage;
-import com.github.atomicblom.finishingtouch.network.NotifyDecalAddedMessageHandler;
+import com.github.atomicblom.finishingtouch.network.*;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraftforge.fml.common.Mod;
@@ -32,6 +29,7 @@ public class TheFinishingTouch
         //Configure Networking
         CHANNEL.registerMessage(AddDecalMessageHandler.class, AddDecalMessage.class, 0, Side.SERVER);
         CHANNEL.registerMessage(NotifyDecalAddedMessageHandler.class, NotifyDecalAddedMessage.class, 1, Side.CLIENT);
+        CHANNEL.registerMessage(SetWandDecalMessageHandler.class, SetWandDecalMessage.class, 2, Side.SERVER);
 
         //Configure GUI handling
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());

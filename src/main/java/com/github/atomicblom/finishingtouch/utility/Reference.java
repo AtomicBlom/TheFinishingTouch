@@ -31,6 +31,19 @@ public final class Reference
 		private Items() {}
 	}
 
+	public static final class NBT {
+
+		public static final String AuthorName = "AuthorName";
+		public static final String DecalName = "DecalName";
+		public static final String DecalType = "DecalType";
+		public static final String DecalLocation = "DecalLocation";
+
+		public static final String Resource = "Resource";
+
+
+		private NBT() {}
+	}
+
 	private static ResourceLocation resource(String path) {
 		return new ResourceLocation(MOD_ID, path);
 	}

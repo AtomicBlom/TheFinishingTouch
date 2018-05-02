@@ -1,5 +1,6 @@
 package com.github.atomicblom.finishingtouch.gui;
 
+import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -30,6 +31,18 @@ class LooseTextureRenderableSlotType extends RenderableSlotTypeBase {
         }
 
         drawTexturedModalRect(renderX, renderY, width, height,0, 0, 1, 1);
+    }
+
+    @Override
+    public String getType()
+    {
+        return Reference.NBT.Resource;
+    }
+
+    @Override
+    public String getTextureLocation()
+    {
+        return resourceLocation.toString();
     }
 
     /**

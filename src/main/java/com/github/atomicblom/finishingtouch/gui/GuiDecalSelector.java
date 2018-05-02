@@ -1,6 +1,8 @@
 package com.github.atomicblom.finishingtouch.gui;
 
+import com.github.atomicblom.finishingtouch.TheFinishingTouch;
 import com.github.atomicblom.finishingtouch.model.Artist;
+import com.github.atomicblom.finishingtouch.network.SetWandDecalMessage;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import com.google.common.base.Strings;
@@ -14,6 +16,8 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class GuiDecalSelector extends GuiScreen {
 
     private static final ResourceLocation DECAL_SELECTOR_TEXTURE = new ResourceLocation(Reference.MOD_ID, "textures/gui/decal_selector.png");
+    private final ItemStack itemBeingEdited;
 
     /** The X size of the inventory window in pixels. */
     protected int xSize = 252;
@@ -52,6 +57,11 @@ public class GuiDecalSelector extends GuiScreen {
     private RenderableSlot selectedDecal;
     private List<RenderableSlot> visibleDecalList;
 
+    public GuiDecalSelector(ItemStack itemBeingEdited)
+    {
+        this.itemBeingEdited = itemBeingEdited;
+    }
+
     /**
      * Adds the buttons (and other controls) to the screen in question. Called when the GUI is displayed and when the
      * window resizes, the buttonList is cleared beforehand.
@@ -61,6 +71,13 @@ public class GuiDecalSelector extends GuiScreen {
         super.initGui();
         guiLeft = (width - xSize) / 2;
         guiTop = (height - ySize) / 2;
+
+        NBTTagCompound tagCompound = itemBeingEdited.getTagCompound();
+        if (tagCompound == null) {
+            tagCompound = new NBTTagCompound();
+            itemBeingEdited.setTagCompound(tagCompound);
+        }
+        String selectedDecalLocation = tagCompound.getString(Reference.NBT.DecalLocation);
 
         final IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
         final ResourceLocation location = new ResourceLocation(Reference.MOD_ID, "textures/decals/decals.json");
@@ -86,6 +103,10 @@ public class GuiDecalSelector extends GuiScreen {
                     //Stitched texture
                 } else {
                     renderableSlot.renderableSlotType = new LooseTextureRenderableSlotType(new ResourceLocation(decalLocation));
+                }
+
+                if (renderableSlot.renderableSlotType.getTextureLocation().equals(selectedDecalLocation)) {
+                    selectedDecal = renderableSlot;
                 }
 
                 return renderableSlot;
@@ -316,6 +337,15 @@ public class GuiDecalSelector extends GuiScreen {
         if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && selectedItem < totalDecals)
         {
             selectedDecal = visibleDecalList.get(selectedItem);
+
+            NBTTagCompound tagCompound = itemBeingEdited.getTagCompound();
+            tagCompound.setString(Reference.NBT.AuthorName, selectedDecal.authorName);
+            tagCompound.setString(Reference.NBT.DecalName, selectedDecal.decalName);
+            tagCompound.setString(Reference.NBT.DecalType, selectedDecal.renderableSlotType.getType());
+            tagCompound.setString(Reference.NBT.DecalLocation, selectedDecal.renderableSlotType.getTextureLocation());
+
+            TheFinishingTouch.CHANNEL.sendToServer(new SetWandDecalMessage(tagCompound));
+
             return true;
         }
         return false;

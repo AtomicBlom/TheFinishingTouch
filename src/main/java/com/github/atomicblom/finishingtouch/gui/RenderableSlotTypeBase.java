@@ -36,4 +36,8 @@ abstract class RenderableSlotTypeBase
     {
         return textureHeight;
     }
+
+	public abstract String getType();
+
+    public abstract String getTextureLocation();
 }
