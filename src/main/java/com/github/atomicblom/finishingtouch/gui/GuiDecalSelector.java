@@ -4,6 +4,7 @@ import com.github.atomicblom.finishingtouch.model.Artist;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -11,6 +12,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,9 +26,9 @@ public class GuiDecalSelector extends GuiScreen {
     private static final ResourceLocation DECAL_SELECTOR_TEXTURE = new ResourceLocation(Reference.MOD_ID, "textures/gui/decal_selector.png");
 
     /** The X size of the inventory window in pixels. */
-    protected int xSize = 234;
+    protected int xSize = 252;
     /** The Y size of the inventory window in pixels. */
-    protected int ySize = 140;
+    protected int ySize = 134;
 
     protected int guiLeft;
     protected int guiTop;
@@ -41,8 +43,8 @@ public class GuiDecalSelector extends GuiScreen {
     final int iconHeight = 16;
     final int iconPadding = 2;
 
-    final int slotOffsetX = 66;
-    final int slotOffsetY = 36;
+    final int slotOffsetX = 84;
+    final int slotOffsetY = 30;
 
     private RenderableSlot selectedDecal;
     private List<RenderableSlot> visibleDecalList;
@@ -140,7 +142,7 @@ public class GuiDecalSelector extends GuiScreen {
     private void drawPreviewDecal(RenderableSlot selectedDecal) {
         if (selectedDecal != null) {
             RenderableSlotTypeBase renderableSlot = selectedDecal.renderableSlotType;
-            renderableSlot.render(3, 12, 60, 60);
+            renderableSlot.render(10, 18, 64, 64);
         }
     }
 
@@ -196,17 +198,50 @@ public class GuiDecalSelector extends GuiScreen {
 
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
     {
+
         if (selectedDecal != null) {
-            final String s = "Artist: " + selectedDecal.authorName;
-            this.fontRenderer.drawString(s, this.xSize / 2 - this.fontRenderer.getStringWidth(s) / 2, 6, 4210752);
-            this.fontRenderer.drawString(selectedDecal.decalName, 4, 74, 4210752);
+            GlStateManager.pushMatrix();
+            GlStateManager.enableAlpha();
+            GlStateManager.disableBlend();
+            //GlStateManager.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+
+            float scale = 1f;
+
+            final String authorName = "I am a long dummy";//selectedDecal.authorName;
+            final String decalName = "It was a dark and stormy night.";
+            final String siteName = "§1" + selectedDecal.authorSiteName;
+
+            GlStateManager.pushMatrix();
+            scale = (fontRenderer.getStringWidth(decalName) > 80) ? 0.5f : 1f;
+            GlStateManager.scale(scale, scale, scale);
+            this.fontRenderer.drawString(decalName, (int)(8 * (1/scale)), (int)(92 * (1/scale)), 4210752);
+            GlStateManager.popMatrix();
+
+            GlStateManager.pushMatrix();
+            scale = (fontRenderer.getStringWidth(authorName) > 80) ? 0.5f : 1f;
+            GlStateManager.scale(scale, scale, scale);
+            this.fontRenderer.drawString(authorName, (int)(8 * (1/scale)), (int)(102 * (1/scale)), 4210752);
+            GlStateManager.popMatrix();
+
+            GlStateManager.pushMatrix();
+            scale = (fontRenderer.getStringWidth(siteName) > 80) ? 0.5f : 1f;
+            GlStateManager.scale(scale, scale, scale);
+            this.fontRenderer.drawString(siteName, (int)(8 * (1/scale)), (int)(112 * (1/scale)), 0xFFFFFFFF);
+            GlStateManager.popMatrix();
+
             RenderableSlotTypeBase renderableSlotType = selectedDecal.renderableSlotType;
             if (renderableSlotType.isTextureSizeKnown()) {
                 String textureSize = renderableSlotType.getTextureWidth() + "x" + renderableSlotType.getTextureHeight();
                 int textureSizeWidth = fontRenderer.getStringWidth(textureSize);
-                this.fontRenderer.drawString(textureSize, 59-textureSizeWidth, 61, 4210752);
+                this.fontRenderer.drawString(textureSize, 78-textureSizeWidth, 80, 0xFFFFFFFF);
             }
+
+            //GlStateManager.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            GlStateManager.enableBlend();
+            GlStateManager.disableAlpha();
+            GlStateManager.popMatrix();
         }
+
     }
 
     @Override
