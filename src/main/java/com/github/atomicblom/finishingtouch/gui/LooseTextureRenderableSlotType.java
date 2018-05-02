@@ -1,4 +1,4 @@
-package com.github.atomicblom.finishingtouch;
+package com.github.atomicblom.finishingtouch.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -19,16 +19,17 @@ class LooseTextureRenderableSlotType extends RenderableSlotTypeBase {
     }
 
     @Override
-    public void render(int renderX, int renderY)
+    public void render(int renderX, int renderY, int width, int height)
     {
         Minecraft.getMinecraft().getTextureManager().bindTexture(resourceLocation);
         if (!isTextureSizeKnown()) {
-            int width = GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH);
-            int height = GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT);
-            setTextureSize(width, height);
+            setTextureSize(
+                GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH),
+                GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT)
+            );
         }
 
-        drawTexturedModalRect(renderX, renderY, 16, 16,0, 0, 1, 1);
+        drawTexturedModalRect(renderX, renderY, width, height,0, 0, 1, 1);
     }
 
     /**

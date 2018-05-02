@@ -1,4 +1,4 @@
-package com.github.atomicblom.finishingtouch;
+package com.github.atomicblom.finishingtouch.gui;
 
 abstract class RenderableSlotTypeBase
 {
@@ -13,7 +13,7 @@ abstract class RenderableSlotTypeBase
         return true;
     }
 
-    abstract void render(int renderX, int renderY);
+    abstract void render(int renderX, int renderY, int width, int height);
 
     protected void setTextureSize(int width, int height)
     {

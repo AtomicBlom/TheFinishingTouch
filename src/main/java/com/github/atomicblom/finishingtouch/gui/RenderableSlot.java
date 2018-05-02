@@ -1,4 +1,4 @@
-package com.github.atomicblom.finishingtouch;
+package com.github.atomicblom.finishingtouch.gui;
 
 class RenderableSlot
 {

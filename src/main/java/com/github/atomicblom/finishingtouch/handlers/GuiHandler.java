@@ -1,6 +1,6 @@
 package com.github.atomicblom.finishingtouch.handlers;
 
-import com.github.atomicblom.finishingtouch.GuiDecalSelector;
+import com.github.atomicblom.finishingtouch.gui.GuiDecalSelector;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;

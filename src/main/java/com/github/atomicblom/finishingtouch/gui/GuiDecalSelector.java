@@ -1,4 +1,4 @@
-package com.github.atomicblom.finishingtouch;
+package com.github.atomicblom.finishingtouch.gui;
 
 import com.github.atomicblom.finishingtouch.model.Artist;
 import com.github.atomicblom.finishingtouch.utility.Reference;
@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,6 +45,7 @@ public class GuiDecalSelector extends GuiScreen {
     final int slotOffsetY = 36;
 
     private RenderableSlot selectedDecal;
+    private List<RenderableSlot> visibleDecalList;
 
     /**
      * Adds the buttons (and other controls) to the screen in question. Called when the GUI is displayed and when the
@@ -85,6 +85,7 @@ public class GuiDecalSelector extends GuiScreen {
 
                 return renderableSlot;
             })).flatMap(s -> s).collect(Collectors.toList());
+            visibleDecalList = builtinDecals;
         } catch (final IOException e) {
             e.printStackTrace();
         }
@@ -109,64 +110,22 @@ public class GuiDecalSelector extends GuiScreen {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
-        page = 0;
-
-        final int itemsPerPage = itemsPerRow * itemsPerColumn;
-        int startItem = page * itemsPerPage;
-        final List<RenderableSlot> decalList = this.builtinDecals;
-        final int totalDecals = decalList.size();
-        if (startItem > totalDecals) {
-            startItem = totalDecals - itemsPerPage;
-        }
-        if (startItem < 0) {
-            startItem = 0;
-        }
-
-        final int adjustedMouseX = mouseX - guiLeft - slotOffsetX;
-        final int adjustedMouseY = mouseY - guiTop - slotOffsetY;
-
-        int mouseSlotX = adjustedMouseX / (iconWidth + iconPadding);
-        int mouseSlotY = adjustedMouseY / (iconHeight + iconPadding);
-        if (adjustedMouseX < 0 || adjustedMouseY < 0) {
-            mouseSlotX = -1;
-            mouseSlotY = -1;
-        } else if (adjustedMouseX % (iconWidth + iconPadding) >= iconWidth || adjustedMouseY % (iconHeight + iconPadding) >= iconHeight) {
-            mouseSlotX = -1;
-            mouseSlotY = -1;
-        }
-
         GlStateManager.colorMask(true, true, true, false);
         GlStateManager.enableLighting();
         GlStateManager.enableDepth();
 
-        int currentItem = startItem;
-        for (int y = 0; y < itemsPerRow; ++y) {
-            for (int x = 0; x < itemsPerColumn; ++x) {
-                if (currentItem < totalDecals) {
-                    final RenderableSlot renderableSlot = decalList.get(currentItem);
-                    final int renderX = slotOffsetX + x * (iconWidth + iconPadding);
-                    final int renderY = slotOffsetY + y * (iconHeight + iconPadding);
-                    renderableSlot.renderableSlotType.render(renderX, renderY);
-                }
-                currentItem++;
-            }
-        }
+        drawDecalPage(visibleDecalList);
+        drawPreviewDecal(selectedDecal);
 
-        final int hoveredItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.colorMask(true, true, true, false);
 
-        if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && hoveredItem < totalDecals) {
+        drawHoverSelection(mouseX, mouseY);
 
-            final int renderX = slotOffsetX + mouseSlotX * (iconWidth + iconPadding);
-            final int renderY = slotOffsetY + mouseSlotY * (iconHeight + iconPadding);
-
-            GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
-            GlStateManager.colorMask(true, true, true, false);
-            drawGradientRect(renderX, renderY, renderX + 16, renderY + 16, 0x80FFFFFF, 0x80FFFFFF);
-            GlStateManager.colorMask(true, true, true, false);
-            GlStateManager.enableLighting();
-            GlStateManager.enableDepth();
-        }
+        GlStateManager.colorMask(true, true, true, false);
+        GlStateManager.enableLighting();
+        GlStateManager.enableDepth();
 
         RenderHelper.disableStandardItemLighting();
         drawGuiContainerForegroundLayer(mouseX, mouseY);
@@ -176,6 +135,55 @@ public class GuiDecalSelector extends GuiScreen {
         GlStateManager.enableLighting();
         GlStateManager.enableDepth();
         RenderHelper.enableStandardItemLighting();
+    }
+
+    private void drawPreviewDecal(RenderableSlot selectedDecal) {
+        if (selectedDecal != null) {
+            RenderableSlotTypeBase renderableSlot = selectedDecal.renderableSlotType;
+            renderableSlot.render(3, 12, 60, 60);
+        }
+    }
+
+    private void drawHoverSelection(int mouseX, int mouseY) {
+        int mouseSlotX = getSlotFromMouseX(mouseX);
+        int mouseSlotY = getSlotFromMouseY(mouseY);
+        final int hoveredItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
+
+        if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && hoveredItem < visibleDecalList.size()) {
+            final int renderX = slotOffsetX + mouseSlotX * (iconWidth + iconPadding);
+            final int renderY = slotOffsetY + mouseSlotY * (iconHeight + iconPadding);
+
+            drawGradientRect(renderX, renderY, renderX + 16, renderY + 16, 0x80FFFFFF, 0x80FFFFFF);
+        }
+    }
+
+    private int drawDecalPage(List<RenderableSlot> decalList) {
+        int currentItem = getDecalPageStart(decalList);
+        final int totalDecals = decalList.size();
+        for (int y = 0; y < itemsPerRow; ++y) {
+            for (int x = 0; x < itemsPerColumn; ++x) {
+                if (currentItem < totalDecals) {
+                    final RenderableSlot renderableSlot = decalList.get(currentItem);
+                    final int renderX = slotOffsetX + x * (iconWidth + iconPadding);
+                    final int renderY = slotOffsetY + y * (iconHeight + iconPadding);
+                    renderableSlot.renderableSlotType.render(renderX, renderY, 16, 16);
+                }
+                currentItem++;
+            }
+        }
+        return totalDecals;
+    }
+
+    private int getDecalPageStart(List<RenderableSlot> decalList) {
+        int totalDecals = decalList.size();
+        int startItem = page * itemsPerPage;
+        if (startItem > totalDecals) {
+            startItem = totalDecals - itemsPerPage;
+        }
+        if (startItem < 0) {
+            startItem = 0;
+        }
+        return startItem;
     }
 
     private void drawGuiContainerBackgroundLayer() {
@@ -199,10 +207,7 @@ public class GuiDecalSelector extends GuiScreen {
                 this.fontRenderer.drawString(textureSize, 59-textureSizeWidth, 61, 4210752);
             }
         }
-
     }
-
-
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
@@ -211,20 +216,8 @@ public class GuiDecalSelector extends GuiScreen {
             final List<RenderableSlot> decalList = this.builtinDecals;
             final int totalDecals = decalList.size();
 
-            final int slotOffsetX = 66;
-            final int slotOffsetY = 36;
-            final int adjustedMouseX = mouseX - guiLeft - slotOffsetX;
-            final int adjustedMouseY = mouseY - guiTop - slotOffsetY;
-
-            int mouseSlotX = adjustedMouseX / (iconWidth + iconPadding);
-            int mouseSlotY = adjustedMouseY / (iconHeight + iconPadding);
-            if (adjustedMouseX < 0 || adjustedMouseY < 0) {
-                mouseSlotX = -1;
-                mouseSlotY = -1;
-            } else if (adjustedMouseX % (iconWidth + iconPadding) >= iconWidth || adjustedMouseY % (iconHeight + iconPadding) >= iconHeight) {
-                mouseSlotX = -1;
-                mouseSlotY = -1;
-            }
+            int mouseSlotX = getSlotFromMouseX(mouseX);
+            int mouseSlotY = getSlotFromMouseY(mouseY);
 
             final int selectedItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
 
@@ -233,5 +226,28 @@ public class GuiDecalSelector extends GuiScreen {
                 selectedDecal = decalList.get(selectedItem);
             }
         }
+    }
+
+    private int getSlotFromMouseX(int mouseX) {
+        final int adjustedMouseX = mouseX - guiLeft - slotOffsetX;
+        int iconSize = iconWidth + iconPadding;
+
+        if (adjustedMouseX < 0 || adjustedMouseX % iconSize >= iconWidth) {
+            return -1;
+        }
+
+        return adjustedMouseX / iconSize;
+    }
+
+    private int getSlotFromMouseY(int mouseY) {
+        final int adjustedMouseY = mouseY - guiTop - slotOffsetY;
+        int iconSize = iconHeight + iconPadding;
+
+
+        if (adjustedMouseY < 0 || adjustedMouseY % iconSize >= iconHeight) {
+            return -1;
+        }
+
+        return adjustedMouseY / iconSize;
     }
 }
