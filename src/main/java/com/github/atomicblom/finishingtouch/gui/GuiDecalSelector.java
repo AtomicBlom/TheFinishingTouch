@@ -1,10 +1,13 @@
 package com.github.atomicblom.finishingtouch.gui;
 
 import com.github.atomicblom.finishingtouch.model.Artist;
+import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import com.sun.jndi.toolkit.url.Uri;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiConfirmOpenLink;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -12,11 +15,11 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -95,8 +98,6 @@ public class GuiDecalSelector extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        final int i = guiLeft;
-        final int j = guiTop;
         drawGuiContainerBackgroundLayer();
         GlStateManager.disableRescaleNormal();
         RenderHelper.disableStandardItemLighting();
@@ -105,7 +106,7 @@ public class GuiDecalSelector extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
         RenderHelper.enableGUIStandardItemLighting();
         GlStateManager.pushMatrix();
-        GlStateManager.translate(i, j, 0.0F);
+        GlStateManager.translate(guiLeft, guiTop, 0.0F);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableRescaleNormal();
 
@@ -141,14 +142,14 @@ public class GuiDecalSelector extends GuiScreen {
 
     private void drawPreviewDecal(RenderableSlot selectedDecal) {
         if (selectedDecal != null) {
-            RenderableSlotTypeBase renderableSlot = selectedDecal.renderableSlotType;
+            final RenderableSlotTypeBase renderableSlot = selectedDecal.renderableSlotType;
             renderableSlot.render(10, 18, 64, 64);
         }
     }
 
     private void drawHoverSelection(int mouseX, int mouseY) {
-        int mouseSlotX = getSlotFromMouseX(mouseX);
-        int mouseSlotY = getSlotFromMouseY(mouseY);
+        final int mouseSlotX = getSlotFromMouseX(mouseX);
+        final int mouseSlotY = getSlotFromMouseY(mouseY);
         final int hoveredItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
 
         if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && hoveredItem < visibleDecalList.size()) {
@@ -177,7 +178,7 @@ public class GuiDecalSelector extends GuiScreen {
     }
 
     private int getDecalPageStart(List<RenderableSlot> decalList) {
-        int totalDecals = decalList.size();
+        final int totalDecals = decalList.size();
         int startItem = page * itemsPerPage;
         if (startItem > totalDecals) {
             startItem = totalDecals - itemsPerPage;
@@ -198,74 +199,131 @@ public class GuiDecalSelector extends GuiScreen {
 
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
     {
+        mc.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
+        drawTexturedModalRect(82, 17, 0, 134, 138, 12);
+        drawTexturedModalRect(140, 11, 138, 134, 6, 13);
+        drawTexturedModalRect(137, 119, 144, 134, 6, 13);
+        drawTexturedModalRect(185, 119, 150, 134, 6, 13);
 
         if (selectedDecal != null) {
-            GlStateManager.pushMatrix();
-            GlStateManager.enableAlpha();
-            GlStateManager.disableBlend();
-            //GlStateManager.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            float scale;
 
-            float scale = 1f;
-
-            final String authorName = "I am a long dummy";//selectedDecal.authorName;
-            final String decalName = "It was a dark and stormy night.";
-            final String siteName = "§1" + selectedDecal.authorSiteName;
+            final String authorName = selectedDecal.authorName;
+            final String decalName = selectedDecal.decalName;
+            final String siteName = "§9" + selectedDecal.authorSiteName;
 
             GlStateManager.pushMatrix();
-            scale = (fontRenderer.getStringWidth(decalName) > 80) ? 0.5f : 1f;
+            scale = fontRenderer.getStringWidth(decalName) > 80 ? 0.5f : 1f;
             GlStateManager.scale(scale, scale, scale);
-            this.fontRenderer.drawString(decalName, (int)(8 * (1/scale)), (int)(92 * (1/scale)), 4210752);
+            fontRenderer.drawString(decalName, (int)(8 * (1/scale)), (int)(92 * (1/scale)), 4210752);
             GlStateManager.popMatrix();
 
             GlStateManager.pushMatrix();
-            scale = (fontRenderer.getStringWidth(authorName) > 80) ? 0.5f : 1f;
+            scale = fontRenderer.getStringWidth(authorName) > 80 ? 0.5f : 1f;
             GlStateManager.scale(scale, scale, scale);
-            this.fontRenderer.drawString(authorName, (int)(8 * (1/scale)), (int)(102 * (1/scale)), 4210752);
+            fontRenderer.drawString(authorName, (int)(8 * (1/scale)), (int)(102 * (1/scale)), 4210752);
             GlStateManager.popMatrix();
 
             GlStateManager.pushMatrix();
-            scale = (fontRenderer.getStringWidth(siteName) > 80) ? 0.5f : 1f;
+            scale = fontRenderer.getStringWidth(siteName) > 80 ? 0.5f : 1f;
             GlStateManager.scale(scale, scale, scale);
-            this.fontRenderer.drawString(siteName, (int)(8 * (1/scale)), (int)(112 * (1/scale)), 0xFFFFFFFF);
+            fontRenderer.drawString(siteName, (int)(8 * (1/scale)), (int)(112 * (1/scale)), 0xFFFFFFFF);
             GlStateManager.popMatrix();
 
-            RenderableSlotTypeBase renderableSlotType = selectedDecal.renderableSlotType;
+            final RenderableSlotTypeBase renderableSlotType = selectedDecal.renderableSlotType;
             if (renderableSlotType.isTextureSizeKnown()) {
-                String textureSize = renderableSlotType.getTextureWidth() + "x" + renderableSlotType.getTextureHeight();
-                int textureSizeWidth = fontRenderer.getStringWidth(textureSize);
-                this.fontRenderer.drawString(textureSize, 78-textureSizeWidth, 80, 0xFFFFFFFF);
+                final String textureSize = renderableSlotType.getTextureWidth() + "x" + renderableSlotType.getTextureHeight();
+                final int textureSizeWidth = fontRenderer.getStringWidth(textureSize);
+                fontRenderer.drawString(textureSize, 78-textureSizeWidth, 80, 0xFFFFFFFF);
             }
-
-            //GlStateManager.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-            GlStateManager.enableBlend();
-            GlStateManager.disableAlpha();
-            GlStateManager.popMatrix();
         }
 
+        //TODO: Localize
+        fontRenderer.drawString("Included", 86, 20, 0xFFFFFFFF);
+        fontRenderer.drawString("Community", 158, 20, 0xFF808080);
+        fontRenderer.drawString("Decal Library", 7, 6, 4210752);
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton)
     {
+        final int adjustedMouseX = mouseX - guiLeft;
+        final int adjustedMouseY = mouseY - guiTop;
         if (mouseButton == 0) {
-            final List<RenderableSlot> decalList = this.builtinDecals;
-            final int totalDecals = decalList.size();
-
-            int mouseSlotX = getSlotFromMouseX(mouseX);
-            int mouseSlotY = getSlotFromMouseY(mouseY);
-
-            final int selectedItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
-
-            if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && selectedItem < totalDecals)
-            {
-                selectedDecal = decalList.get(selectedItem);
-            }
+            if (trySelectDecal(mouseX, mouseY)) return;
+            if (trySelectArtistLink(adjustedMouseX, adjustedMouseY)) return;
         }
+    }
+
+    private boolean trySelectArtistLink(int mouseX, int mouseY)
+    {
+        if (selectedDecal == null || Strings.isNullOrEmpty(selectedDecal.authorUrl)) return false;
+        if (mouseX < 7 || mouseX > 78) return false;
+        if (mouseY < 109 || mouseY > 117) return false;
+
+        if (mc.gameSettings.chatLinksPrompt)
+        {
+            mc.displayGuiScreen(new GuiConfirmOpenLink(this, selectedDecal.authorSiteName, -1, false));
+        }
+        else
+        {
+            openAuthorUrl();
+        }
+        return true;
+    }
+
+    private void openAuthorUrl()
+    {
+        try
+        {
+            URI uri = new URI(selectedDecal.authorUrl);
+            Class<?> oclass = Class.forName("java.awt.Desktop");
+            Object object = oclass.getMethod("getDesktop").invoke(null);
+            oclass.getMethod("browse", URI.class).invoke(object, uri);
+        }
+        catch (Throwable throwable1)
+        {
+            Throwable throwable = throwable1.getCause();
+            LogHelper.error("Couldn't open link: {}", (Object)(throwable == null ? "<UNKNOWN>" : throwable.getMessage()));
+        }
+    }
+
+    @Override
+    public void confirmClicked(boolean result, int id)
+    {
+        if (id == -1)
+        {
+            if (result)
+            {
+                openAuthorUrl();
+            }
+
+            mc.displayGuiScreen(this);
+        } else {
+            super.confirmClicked(result, id);
+        }
+    }
+
+    private boolean trySelectDecal(int mouseX, int mouseY)
+    {
+        final int totalDecals = visibleDecalList.size();
+
+        final int mouseSlotX = getSlotFromMouseX(mouseX);
+        final int mouseSlotY = getSlotFromMouseY(mouseY);
+
+        final int selectedItem = (page*itemsPerPage) + mouseSlotY * itemsPerRow + mouseSlotX;
+
+        if (mouseSlotX >= 0 && mouseSlotY >= 0 && mouseSlotX < itemsPerRow && mouseSlotY < itemsPerColumn && selectedItem < totalDecals)
+        {
+            selectedDecal = visibleDecalList.get(selectedItem);
+            return true;
+        }
+        return false;
     }
 
     private int getSlotFromMouseX(int mouseX) {
         final int adjustedMouseX = mouseX - guiLeft - slotOffsetX;
-        int iconSize = iconWidth + iconPadding;
+        final int iconSize = iconWidth + iconPadding;
 
         if (adjustedMouseX < 0 || adjustedMouseX % iconSize >= iconWidth) {
             return -1;
@@ -276,7 +334,7 @@ public class GuiDecalSelector extends GuiScreen {
 
     private int getSlotFromMouseY(int mouseY) {
         final int adjustedMouseY = mouseY - guiTop - slotOffsetY;
-        int iconSize = iconHeight + iconPadding;
+        final int iconSize = iconHeight + iconPadding;
 
 
         if (adjustedMouseY < 0 || adjustedMouseY % iconSize >= iconHeight) {
