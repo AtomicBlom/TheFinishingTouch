@@ -5,10 +5,12 @@ import com.github.atomicblom.finishingtouch.ItemLibrary;
 import com.github.atomicblom.finishingtouch.TheFinishingTouch;
 import com.github.atomicblom.finishingtouch.network.AddDecalMessage;
 import com.github.atomicblom.finishingtouch.utility.PlaneProjection;
+import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.EnumHand;
@@ -37,6 +39,8 @@ public final class DecalPositioningHandler
 	private static Vec3d placeReference = Vec3d.ZERO;
 	private static double angle = 0;
 	private static double scale = 1;
+	private static String decalType;
+	private static String decalLocation;
 
 	public static boolean isPlacing() {
 		return isPlacing && placeReference != null;
@@ -79,6 +83,11 @@ public final class DecalPositioningHandler
 		if (!isPlacing && isCurrentlyHeld && objectMouseOver.typeOfHit == Type.BLOCK) {
 			orientation = objectMouseOver.sideHit;
 			origin = objectMouseOver.hitVec;
+			ItemStack decalWand = player.getHeldItemMainhand();
+			NBTTagCompound tagCompound = decalWand.getTagCompound();
+			decalLocation = tagCompound.getString(Reference.NBT.DecalLocation);
+			decalType = tagCompound.getString(Reference.NBT.DecalType);
+
 			isPlacing = true;
 		}
 
@@ -155,7 +164,9 @@ public final class DecalPositioningHandler
 								origin,
 								orientation,
 								angle,
-								scale
+								scale,
+								decalType,
+								decalLocation
 						)
 				)));
 	}
@@ -163,5 +174,15 @@ public final class DecalPositioningHandler
 	public static void reset()
 	{
 		player = null;
+	}
+
+	public static String getDecalType()
+	{
+		return decalType;
+	}
+
+	public static String getDecalLocation()
+	{
+		return decalLocation;
 	}
 }

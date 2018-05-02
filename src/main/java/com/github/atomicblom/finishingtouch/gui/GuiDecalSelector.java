@@ -5,21 +5,21 @@ import com.github.atomicblom.finishingtouch.model.Artist;
 import com.github.atomicblom.finishingtouch.network.SetWandDecalMessage;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
+import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.sun.jndi.toolkit.url.Uri;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiConfirmOpenLink;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -34,28 +34,28 @@ public class GuiDecalSelector extends GuiScreen {
     private final ItemStack itemBeingEdited;
 
     /** The X size of the inventory window in pixels. */
-    protected int xSize = 252;
+    private static final int xSize = 252;
     /** The Y size of the inventory window in pixels. */
-    protected int ySize = 134;
+    private static final int ySize = 134;
 
-    protected int guiLeft;
-    protected int guiTop;
-    private List<RenderableSlot> builtinDecals;
+    private int guiLeft;
+    private int guiTop;
+    private List<RenderableSlot> builtinDecals = null;
 
-    private int page = 0;
+    private static final int page = 0;
 
-    final int itemsPerRow = 9;
-    final int itemsPerColumn = 5;
-    final int itemsPerPage = itemsPerRow * itemsPerColumn;
-    final int iconWidth = 16;
-    final int iconHeight = 16;
-    final int iconPadding = 2;
+    private static final int itemsPerRow = 9;
+    private static final int itemsPerColumn = 5;
+    private static final int itemsPerPage = itemsPerRow * itemsPerColumn;
+    private static final int iconWidth = 16;
+    private static final int iconHeight = 16;
+    private static final int iconPadding = 2;
 
-    final int slotOffsetX = 84;
-    final int slotOffsetY = 30;
+    private static final int slotOffsetX = 84;
+    private static final int slotOffsetY = 30;
 
-    private RenderableSlot selectedDecal;
-    private List<RenderableSlot> visibleDecalList;
+    private RenderableSlot selectedDecal = null;
+    private List<RenderableSlot> visibleDecalList = null;
 
     public GuiDecalSelector(ItemStack itemBeingEdited)
     {
@@ -77,13 +77,13 @@ public class GuiDecalSelector extends GuiScreen {
             tagCompound = new NBTTagCompound();
             itemBeingEdited.setTagCompound(tagCompound);
         }
-        String selectedDecalLocation = tagCompound.getString(Reference.NBT.DecalLocation);
+        final String selectedDecalLocation = tagCompound.getString(NBT.DecalLocation);
 
         final IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
         final ResourceLocation location = new ResourceLocation(Reference.MOD_ID, "textures/decals/decals.json");
-        try (final IResource resource = resourceManager.getResource(location))
+        try (final IResource resource = resourceManager.getResource(location);
+             final Reader reader = new InputStreamReader(resource.getInputStream()))
         {
-            final Reader reader = new InputStreamReader(resource.getInputStream());
             final Gson gson = new Gson();
 
             builtinDecals = Arrays.stream(gson.fromJson(reader, Artist[].class)).map(a -> Arrays.stream(a.getDecals()).map(d -> {
@@ -94,7 +94,7 @@ public class GuiDecalSelector extends GuiScreen {
                 renderableSlot.decalName = d.getName();
                 String decalLocation = d.getLocation();
                 if (!decalLocation.endsWith(".png")) {
-                    decalLocation = decalLocation + ".png";
+                    decalLocation += ".png";
                 }
 
                 if (decalLocation.startsWith("http://") || decalLocation.startsWith("https://")) {
@@ -110,10 +110,10 @@ public class GuiDecalSelector extends GuiScreen {
                 }
 
                 return renderableSlot;
-            })).flatMap(s -> s).collect(Collectors.toList());
+            })).flatMap(items -> items).collect(Collectors.toList());
             visibleDecalList = builtinDecals;
         } catch (final IOException e) {
-            e.printStackTrace();
+            LogHelper.error(e.toString());
         }
     }
 
@@ -260,9 +260,10 @@ public class GuiDecalSelector extends GuiScreen {
         }
 
         //TODO: Localize
-        fontRenderer.drawString("Included", 86, 20, 0xFFFFFFFF);
-        fontRenderer.drawString("Community", 158, 20, 0xFF808080);
-        fontRenderer.drawString("Decal Library", 7, 6, 4210752);
+
+        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.included"), 86, 20, 0xFFFFFFFF);
+        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.community"), 158, 20, 0xFF808080);
+        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.decallibrary"), 7, 6, 4210752);
     }
 
     @Override
@@ -297,14 +298,14 @@ public class GuiDecalSelector extends GuiScreen {
     {
         try
         {
-            URI uri = new URI(selectedDecal.authorUrl);
-            Class<?> oclass = Class.forName("java.awt.Desktop");
-            Object object = oclass.getMethod("getDesktop").invoke(null);
+            final URI uri = new URI(selectedDecal.authorUrl);
+            final Class<?> oclass = Class.forName("java.awt.Desktop");
+            final Object object = oclass.getMethod("getDesktop").invoke(null);
             oclass.getMethod("browse", URI.class).invoke(object, uri);
         }
-        catch (Throwable throwable1)
+        catch (final Throwable throwable1)
         {
-            Throwable throwable = throwable1.getCause();
+            final Throwable throwable = throwable1.getCause();
             LogHelper.error("Couldn't open link: {}", (Object)(throwable == null ? "<UNKNOWN>" : throwable.getMessage()));
         }
     }
@@ -338,11 +339,11 @@ public class GuiDecalSelector extends GuiScreen {
         {
             selectedDecal = visibleDecalList.get(selectedItem);
 
-            NBTTagCompound tagCompound = itemBeingEdited.getTagCompound();
-            tagCompound.setString(Reference.NBT.AuthorName, selectedDecal.authorName);
-            tagCompound.setString(Reference.NBT.DecalName, selectedDecal.decalName);
-            tagCompound.setString(Reference.NBT.DecalType, selectedDecal.renderableSlotType.getType());
-            tagCompound.setString(Reference.NBT.DecalLocation, selectedDecal.renderableSlotType.getTextureLocation());
+            final NBTTagCompound tagCompound = itemBeingEdited.getTagCompound();
+            tagCompound.setString(NBT.AuthorName, selectedDecal.authorName);
+            tagCompound.setString(NBT.DecalName, selectedDecal.decalName);
+            tagCompound.setString(NBT.DecalType, selectedDecal.renderableSlotType.getType());
+            tagCompound.setString(NBT.DecalLocation, selectedDecal.renderableSlotType.getTextureLocation());
 
             TheFinishingTouch.CHANNEL.sendToServer(new SetWandDecalMessage(tagCompound));
 
