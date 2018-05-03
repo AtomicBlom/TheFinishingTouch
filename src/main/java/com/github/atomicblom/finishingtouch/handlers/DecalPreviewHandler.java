@@ -1,5 +1,6 @@
 package com.github.atomicblom.finishingtouch.handlers;
 
+import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -58,7 +59,10 @@ public final class DecalPreviewHandler
 			final double maxY = placeReferencePoint.y - event.getPlayer().posY + normal.getY() * decalOffset;
 			final double maxZ = placeReferencePoint.z - event.getPlayer().posZ + normal.getZ() * decalOffset;
 
-			minecraft.getTextureManager().bindTexture(new ResourceLocation(Reference.MOD_ID, "textures/vegeta897_theres_a_hole_in_the_forum.png"));
+			if (DecalPositioningHandler.getDecalType() == EnumDecalType.Loose) {
+				minecraft.getTextureManager().bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
+			}
+
 			GlStateManager.pushAttrib();
 			GlStateManager.disableTexture2D();
 			GlStateManager.enableBlend();

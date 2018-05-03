@@ -1,5 +1,6 @@
 package com.github.atomicblom.finishingtouch.gui;
 
+import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -34,9 +35,9 @@ class LooseTextureRenderableSlotType extends RenderableSlotTypeBase {
     }
 
     @Override
-    public String getType()
+    public EnumDecalType getType()
     {
-        return Reference.NBT.Resource;
+        return EnumDecalType.Loose;
     }
 
     @Override

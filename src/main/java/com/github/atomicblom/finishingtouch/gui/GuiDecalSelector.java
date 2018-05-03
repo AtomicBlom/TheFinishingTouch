@@ -342,7 +342,7 @@ public class GuiDecalSelector extends GuiScreen {
             final NBTTagCompound tagCompound = itemBeingEdited.getTagCompound();
             tagCompound.setString(NBT.AuthorName, selectedDecal.authorName);
             tagCompound.setString(NBT.DecalName, selectedDecal.decalName);
-            tagCompound.setString(NBT.DecalType, selectedDecal.renderableSlotType.getType());
+            tagCompound.setInteger(NBT.DecalType, selectedDecal.renderableSlotType.getType().ordinal());
             tagCompound.setString(NBT.DecalLocation, selectedDecal.renderableSlotType.getTextureLocation());
 
             TheFinishingTouch.CHANNEL.sendToServer(new SetWandDecalMessage(tagCompound));

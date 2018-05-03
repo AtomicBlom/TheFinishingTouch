@@ -2,6 +2,7 @@ package com.github.atomicblom.finishingtouch.handlers;
 
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
+import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.decals.RenderableDecalStore;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
@@ -42,7 +43,8 @@ public final class WorldRenderHandler
 		GlStateManager.resetColor();
 		GlStateManager.depthMask(true);
 		GlStateManager.enableTexture2D();
-		minecraft.getTextureManager().bindTexture(new ResourceLocation(Reference.MOD_ID, "textures/vegeta897_theres_a_hole_in_the_forum.png"));
+
+		//minecraft.getTextureManager().bindTexture(new ResourceLocation(Reference.MOD_ID, "textures/vegeta897_theres_a_hole_in_the_forum.png"));
 
 		final DecalPreviewHandler.RenderHelp[] EnumFacingFixes = {
 				new DecalPreviewHandler.RenderHelp(EnumFacing.DOWN, 0, false, true),
@@ -57,6 +59,10 @@ public final class WorldRenderHandler
 		{
 			for (final Decal decal : decalList.decals)
 			{
+				if (decal.getType() == EnumDecalType.Loose) {
+					minecraft.getTextureManager().bindTexture(new ResourceLocation(decal.getLocation()));
+				}
+
 				final EnumFacing orientation = decal.getOrientation();
 				final DecalPreviewHandler.RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
 

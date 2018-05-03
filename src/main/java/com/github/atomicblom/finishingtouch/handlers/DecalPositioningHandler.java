@@ -3,6 +3,7 @@ package com.github.atomicblom.finishingtouch.handlers;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.ItemLibrary;
 import com.github.atomicblom.finishingtouch.TheFinishingTouch;
+import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.network.AddDecalMessage;
 import com.github.atomicblom.finishingtouch.utility.PlaneProjection;
 import com.github.atomicblom.finishingtouch.utility.Reference;
@@ -39,7 +40,7 @@ public final class DecalPositioningHandler
 	private static Vec3d placeReference = Vec3d.ZERO;
 	private static double angle = 0;
 	private static double scale = 1;
-	private static String decalType;
+	private static EnumDecalType decalType;
 	private static String decalLocation;
 
 	public static boolean isPlacing() {
@@ -86,7 +87,7 @@ public final class DecalPositioningHandler
 			ItemStack decalWand = player.getHeldItemMainhand();
 			NBTTagCompound tagCompound = decalWand.getTagCompound();
 			decalLocation = tagCompound.getString(Reference.NBT.DecalLocation);
-			decalType = tagCompound.getString(Reference.NBT.DecalType);
+			decalType = (EnumDecalType.values()[tagCompound.getInteger(Reference.NBT.DecalType)]);
 
 			isPlacing = true;
 		}
@@ -176,7 +177,7 @@ public final class DecalPositioningHandler
 		player = null;
 	}
 
-	public static String getDecalType()
+	public static EnumDecalType getDecalType()
 	{
 		return decalType;
 	}

@@ -1,5 +1,7 @@
 package com.github.atomicblom.finishingtouch.gui;
 
+import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
+
 abstract class RenderableSlotTypeBase
 {
     private boolean shouldRender = false;
@@ -37,7 +39,7 @@ abstract class RenderableSlotTypeBase
         return textureHeight;
     }
 
-	public abstract String getType();
+	public abstract EnumDecalType getType();
 
     public abstract String getTextureLocation();
 }
