@@ -259,11 +259,9 @@ public class GuiDecalSelector extends GuiScreen {
             }
         }
 
-        //TODO: Localize
-
-        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.included"), 86, 20, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.community"), 158, 20, 0xFF808080);
-        fontRenderer.drawString(I18n.format(Reference.MOD_ID + ":gui.decalselector.decallibrary"), 7, 6, 4210752);
+        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.included"), 86, 20, 0xFFFFFFFF);
+        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.community"), 158, 20, 0xFF808080);
+        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.decallibrary"), 7, 6, 4210752);
     }
 
     @Override

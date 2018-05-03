@@ -12,7 +12,7 @@ public final class Reference
 	public static final String NAME = "Finishing Touch";
 	public static final String VERSION = "1.0";
 
-	public static final CreativeTabs CreativeTab = new CreativeTabs(MOD_ID + ".tab_label") {
+	public static final CreativeTabs CreativeTab = new CreativeTabs(MOD_ID + ":tab_label") {
 		private ItemStack _stack = null;
 
 		@Override
