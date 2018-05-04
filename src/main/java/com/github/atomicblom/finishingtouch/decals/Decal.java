@@ -1,6 +1,9 @@
 package com.github.atomicblom.finishingtouch.decals;
 
+import com.github.atomicblom.finishingtouch.utility.Reference;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
@@ -71,6 +74,35 @@ public class Decal
 		buf.writeDouble(decal.scale);
 		buf.writeInt(decal.type.ordinal());
 		ByteBufUtils.writeUTF8String(buf, decal.location);
+	}
+
+	public static NBTTagCompound asNBT(Decal decal) {
+		NBTTagCompound nbt = new NBTTagCompound();
+		nbt.setDouble(Reference.NBT.DecalOriginX, decal.origin.x);
+		nbt.setDouble(Reference.NBT.DecalOriginY, decal.origin.y);
+		nbt.setDouble(Reference.NBT.DecalOriginZ, decal.origin.z);
+		nbt.setByte(Reference.NBT.DecalOrientation, (byte)decal.orientation.getIndex());
+		nbt.setDouble(Reference.NBT.DecalAngle, decal.angle);
+		nbt.setDouble(Reference.NBT.DecalScale, decal.scale);
+		nbt.setByte(Reference.NBT.DecalType, (byte)decal.type.ordinal());
+		nbt.setString(Reference.NBT.DecalLocation, decal.location);
+		return nbt;
+	}
+
+	public static Decal fromNBT(NBTTagCompound nbt) {
+
+		return new Decal(
+				new Vec3d(
+						nbt.getDouble(Reference.NBT.DecalOriginX),
+						nbt.getDouble(Reference.NBT.DecalOriginY),
+						nbt.getDouble(Reference.NBT.DecalOriginZ)
+				),
+				EnumFacing.VALUES[nbt.getByte(Reference.NBT.DecalOrientation)],
+				nbt.getDouble(Reference.NBT.DecalAngle),
+				nbt.getDouble(Reference.NBT.DecalScale),
+				EnumDecalType.values()[nbt.getByte(Reference.NBT.DecalType)],
+				nbt.getString(Reference.NBT.DecalLocation)
+		);
 	}
 
 	@Override

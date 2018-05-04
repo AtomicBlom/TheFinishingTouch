@@ -17,7 +17,7 @@ public class AddDecalMessageHandler implements IMessageHandler<AddDecalMessage, 
 	public IMessage onMessage(AddDecalMessage message, MessageContext ctx)
 	{
 		EntityPlayerMP player = ctx.getServerHandler().player;
-		Chunk chunk = player.world.getChunkFromChunkCoords(player.chunkCoordX, player.chunkCoordZ);
+		Chunk chunk = player.world.getChunkFromBlockCoords(player.getPosition());
 		Decal decal = message.getDecal();
 		if (chunk.isLoaded()) {
 			DecalStore.addDecal(chunk, decal);

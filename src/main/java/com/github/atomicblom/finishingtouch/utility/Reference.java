@@ -37,8 +37,14 @@ public final class Reference
 		public static final String DecalName = "DecalName";
 		public static final String DecalType = "DecalType";
 		public static final String DecalLocation = "DecalLocation";
+		public static final String DecalOriginX = "X";
+		public static final String DecalOriginY = "Y";
+		public static final String DecalOriginZ = "Z";
+		public static final String DecalAngle = "Angle";
+		public static final String DecalScale = "Scale";
+		public static final String DecalOrientation = "Orientation";
 
-		public static final String Resource = "Resource";
+		public static final String ChunkDecals = "FinishingTouch";
 
 
 		private NBT() {}

@@ -9,6 +9,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import java.util.List;
+
 public class NotifyDecalAddedMessageHandler implements IMessageHandler<NotifyDecalAddedMessage, IMessage>
 {
 	@Override
@@ -16,9 +18,12 @@ public class NotifyDecalAddedMessageHandler implements IMessageHandler<NotifyDec
 	{
 		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		Chunk chunk = player.world.getChunkFromChunkCoords(player.chunkCoordX, player.chunkCoordZ);
-		Decal decal = message.getDecal();
+		List<Decal> decalList = message.getDecals();
 
-		RenderableDecalStore.addDecal(chunk, decal);
+		for (Decal decal : decalList) {
+			RenderableDecalStore.addDecal(chunk, decal);
+		}
+
 
 		return null;
 	}

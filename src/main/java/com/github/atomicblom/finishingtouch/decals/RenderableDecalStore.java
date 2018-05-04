@@ -8,6 +8,8 @@ import com.google.common.collect.Maps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,14 @@ public class RenderableDecalStore
 
 	public static void addDecal(Chunk chunk, Decal decal)
 	{
-		if (!chunk.isLoaded()) return;
+		int chunkX = chunk.x;
+		int chunkZ = chunk.z;
+
+		if (chunk instanceof EmptyChunk) {
+			chunkX = ((int)decal.getOrigin().x) >> 4;
+			chunkZ = ((int)decal.getOrigin().z) >> 4;
+		} else if (!chunk.isLoaded()) return;
+
 		LogHelper.info("Decal added to server store: {}", decal);
 
 		final int dimension = chunk.getWorld().provider.getDimension();
@@ -27,7 +36,7 @@ public class RenderableDecalStore
 		final DimensionDecals dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new DimensionDecals());
 
 
-		final DecalList decalList = dimensionChunkMap.getDecalListForChunk(chunk.x, chunk.z);
+		final DecalList decalList = dimensionChunkMap.getDecalListForChunk(chunkX, chunkZ);
 
 		decalList.add(decal);
 		dimensionChunkMap.setNeedsUpdating();

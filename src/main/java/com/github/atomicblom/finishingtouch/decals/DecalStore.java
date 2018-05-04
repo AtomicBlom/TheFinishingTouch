@@ -12,16 +12,29 @@ public class DecalStore
 
 	public static void addDecal(Chunk chunk, Decal decal)
 	{
-		if (!chunk.isLoaded()) return;
+		final DecalList decalList = getDecalsInChunk(chunk);
+		if (decalList == null) return;
 		LogHelper.info("Decal added to server store: {}", decal);
+
+		decalList.add(decal);
+	}
+
+	public static DecalList getDecalsInChunk(Chunk chunk) {
+		if (!chunk.isLoaded()) return null;
 
 		final int dimension = chunk.getWorld().provider.getDimension();
 
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
 
 		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-		final DecalList decalList = dimensionChunkMap.computeIfAbsent(chunkPos, k -> new DecalList(chunk.x, chunk.z));
+		return dimensionChunkMap.computeIfAbsent(chunkPos, k -> new DecalList(chunk.x, chunk.z));
+	}
 
-		decalList.add(decal);
+	public static void releaseChunk(Chunk chunk) {
+		final int dimension = chunk.getWorld().provider.getDimension();
+
+		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
+		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
+		dimensionChunkMap.remove(chunkPos);
 	}
 }
