@@ -11,17 +11,27 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.List;
 
-public class NotifyDecalAddedMessageHandler implements IMessageHandler<NotifyDecalAddedMessage, IMessage>
+public class SendDecalEventToClientMessageHandler implements IMessageHandler<SendDecalEventToClientMessage, IMessage>
 {
 	@Override
-	public IMessage onMessage(NotifyDecalAddedMessage message, MessageContext ctx)
+	public IMessage onMessage(SendDecalEventToClientMessage message, MessageContext ctx)
 	{
 		EntityPlayerSP player = Minecraft.getMinecraft().player;
 		Chunk chunk = player.world.getChunkFromChunkCoords(player.chunkCoordX, player.chunkCoordZ);
 		List<Decal> decalList = message.getDecals();
+		DecalAction action = message.getAction();
 
-		for (Decal decal : decalList) {
-			RenderableDecalStore.addDecal(chunk, decal);
+		if (action == DecalAction.ADDING)
+		{
+			for (Decal decal : decalList)
+			{
+				RenderableDecalStore.addDecal(chunk, decal);
+			}
+		} else {
+			for (Decal decal : decalList)
+			{
+				RenderableDecalStore.removeDecal(chunk, decal);
+			}
 		}
 
 

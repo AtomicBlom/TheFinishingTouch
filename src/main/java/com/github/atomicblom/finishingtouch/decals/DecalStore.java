@@ -4,6 +4,7 @@ import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.Map;
 
 public class DecalStore
@@ -17,6 +18,14 @@ public class DecalStore
 		LogHelper.info("Decal added to server store: {}", decal);
 
 		decalList.add(decal);
+	}
+
+	public static void removeDecal(Chunk chunk, Decal decal)
+	{
+		final DecalList decalList = getDecalsInChunk(chunk);
+		if (decalList == null) return;
+		LogHelper.info("Decal removed from server store: {}", decal);
+		decalList.decals.removeIf(d -> d.Is(decal));
 	}
 
 	public static DecalList getDecalsInChunk(Chunk chunk) {

@@ -27,8 +27,8 @@ public class TheFinishingTouch
         LogHelper.setLog(event.getModLog());
 
         //Configure Networking
-        CHANNEL.registerMessage(AddDecalMessageHandler.class, AddDecalMessage.class, 0, Side.SERVER);
-        CHANNEL.registerMessage(NotifyDecalAddedMessageHandler.class, NotifyDecalAddedMessage.class, 1, Side.CLIENT);
+        CHANNEL.registerMessage(DecalMessageHandler.class, DecalMessage.class, 0, Side.SERVER);
+        CHANNEL.registerMessage(SendDecalEventToClientMessageHandler.class, SendDecalEventToClientMessage.class, 1, Side.CLIENT);
         CHANNEL.registerMessage(SetWandDecalMessageHandler.class, SetWandDecalMessage.class, 2, Side.SERVER);
 
         //Configure GUI handling

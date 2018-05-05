@@ -125,4 +125,15 @@ public class Decal
 	public EnumDecalType getType() {
 		return type;
 	}
+
+	public boolean Is(Decal decal)
+	{
+		return orientation == decal.orientation &&
+				origin.x == decal.origin.x &&
+				origin.y == decal.origin.y &&
+				origin.z == decal.origin.z &&
+				angle == decal.angle &&
+				scale == decal.scale &&
+				location.equals(decal.location);
+	}
 }

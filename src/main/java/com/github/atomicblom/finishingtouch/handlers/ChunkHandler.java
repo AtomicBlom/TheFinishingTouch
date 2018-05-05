@@ -4,7 +4,7 @@ import com.github.atomicblom.finishingtouch.TheFinishingTouch;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
 import com.github.atomicblom.finishingtouch.decals.DecalStore;
-import com.github.atomicblom.finishingtouch.network.NotifyDecalAddedMessage;
+import com.github.atomicblom.finishingtouch.network.SendDecalEventToClientMessage;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.nbt.NBTBase;
@@ -14,7 +14,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -65,6 +64,6 @@ public class ChunkHandler
 		DecalList decalsInChunk = DecalStore.getDecalsInChunk(event.getChunkInstance());
 		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;
 
-		TheFinishingTouch.CHANNEL.sendTo(new NotifyDecalAddedMessage(decalsInChunk.decals), event.getPlayer());
+		TheFinishingTouch.CHANNEL.sendTo(new SendDecalEventToClientMessage(decalsInChunk.decals), event.getPlayer());
 	}
 }

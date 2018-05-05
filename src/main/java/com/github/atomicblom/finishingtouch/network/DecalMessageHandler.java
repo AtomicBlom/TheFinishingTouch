@@ -10,22 +10,28 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class AddDecalMessageHandler implements IMessageHandler<AddDecalMessage, IMessage>
+public class DecalMessageHandler implements IMessageHandler<DecalMessage, IMessage>
 
 {
 	@Override
-	public IMessage onMessage(AddDecalMessage message, MessageContext ctx)
+	public IMessage onMessage(DecalMessage message, MessageContext ctx)
 	{
 		EntityPlayerMP player = ctx.getServerHandler().player;
 		Chunk chunk = player.world.getChunkFromBlockCoords(player.getPosition());
 		Decal decal = message.getDecal();
+		DecalAction action = message.getAction();
 		if (chunk.isLoaded()) {
-			DecalStore.addDecal(chunk, decal);
+			if (action == DecalAction.ADDING)
+			{
+				DecalStore.addDecal(chunk, decal);
+			} else {
+				DecalStore.removeDecal(chunk, decal);
+			}
 			LogHelper.info(decal);
 		}
 
 		TheFinishingTouch.CHANNEL.sendToDimension(
-				new NotifyDecalAddedMessage(decal),
+				new SendDecalEventToClientMessage(decal, action),
 				player.dimension
 		);
 

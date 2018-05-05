@@ -7,24 +7,28 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.List;
 
-public class NotifyDecalAddedMessage implements IMessage
+public class SendDecalEventToClientMessage implements IMessage
 {
+	private DecalAction action;
 	private List<Decal> decals = Lists.newArrayList();
 
-	public NotifyDecalAddedMessage() {}
+	public SendDecalEventToClientMessage() {}
 
-	public NotifyDecalAddedMessage(Decal decal)
+	public SendDecalEventToClientMessage(Decal decal, DecalAction action)
 	{
+		this.action = action;
 		decals.add(decal);
 	}
 
-	public NotifyDecalAddedMessage(List<Decal> decals) {
+	public SendDecalEventToClientMessage(List<Decal> decals) {
 		this.decals = decals;
+		this.action = DecalAction.ADDING;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
+		action = buf.readBoolean() ? DecalAction.ADDING : DecalAction.REMOVING;
 		int decalsInBuffer = buf.readInt();
 		for (int i = 0; i < decalsInBuffer; i++) {
 			decals.add(Decal.fromBytes(buf));
@@ -35,6 +39,7 @@ public class NotifyDecalAddedMessage implements IMessage
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
+		buf.writeBoolean(action == DecalAction.ADDING);
 		buf.writeInt(decals.size());
 		for (Decal decal : decals) {
 			Decal.toBytes(buf, decal);
@@ -44,5 +49,10 @@ public class NotifyDecalAddedMessage implements IMessage
 	public List<Decal> getDecals()
 	{
 		return decals;
+	}
+
+	public DecalAction getAction()
+	{
+		return action;
 	}
 }
