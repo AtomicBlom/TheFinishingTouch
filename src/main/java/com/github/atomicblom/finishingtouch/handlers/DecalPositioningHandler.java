@@ -155,6 +155,10 @@ public final class DecalPositioningHandler
 						StrictMath.pow(origin.y - placeReference.y, 2) +
 						StrictMath.pow(origin.z - placeReference.z, 2)
 		) * 2;
+		
+		if (scale > 16) {
+			scale = 16;
+		}
 	}
 
 	private static void finalizeDecal()
