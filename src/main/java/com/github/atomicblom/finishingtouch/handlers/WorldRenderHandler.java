@@ -3,8 +3,7 @@ package com.github.atomicblom.finishingtouch.handlers;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
-import com.github.atomicblom.finishingtouch.decals.RenderableDecalStore;
-import com.github.atomicblom.finishingtouch.utility.Reference;
+import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -21,7 +20,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.opengl.GL11;
 
 import static net.minecraftforge.fml.common.Mod.*;
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
 
 @EventBusSubscriber(Side.CLIENT)
 public final class WorldRenderHandler
@@ -36,7 +34,7 @@ public final class WorldRenderHandler
 		double playerY = player.prevPosY + (player.posY - player.prevPosY) * partialTicks;
 		double playerZ = player.prevPosZ + (player.posZ - player.prevPosZ) * partialTicks;
 
-		Iterable<DecalList> decalsAround = RenderableDecalStore.getDecalsAround(player.dimension, player.getPosition());
+		Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension, player.getPosition());
 		GlStateManager.pushAttrib();
 		GlStateManager.disableBlend();
 		GlStateManager.enableAlpha();
@@ -71,7 +69,7 @@ public final class WorldRenderHandler
 				final double scale = decal.getScale();
 
 				final Vec3i normal = orientation.getOpposite().getDirectionVec();
-				final double decalOffset = -0.04;
+				final double decalOffset = -0.01;
 
 				final Tessellator tessellator = Tessellator.getInstance();
 				final BufferBuilder bufferbuilder = tessellator.getBuffer();

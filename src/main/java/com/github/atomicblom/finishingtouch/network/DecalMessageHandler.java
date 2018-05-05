@@ -1,8 +1,9 @@
 package com.github.atomicblom.finishingtouch.network;
 
+import com.github.atomicblom.finishingtouch.NonRegistryLibrary;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
-import com.github.atomicblom.finishingtouch.decals.DecalStore;
+import com.github.atomicblom.finishingtouch.decals.ServerDecalStore;
 import com.github.atomicblom.finishingtouch.TheFinishingTouch;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.chunk.Chunk;
@@ -23,9 +24,12 @@ public class DecalMessageHandler implements IMessageHandler<DecalMessage, IMessa
 		if (chunk.isLoaded()) {
 			if (action == DecalAction.ADDING)
 			{
-				DecalStore.addDecal(chunk, decal);
+				ServerDecalStore.addDecal(chunk, decal);
+				player.addStat(NonRegistryLibrary.decalsAdded, 1);
+
 			} else {
-				DecalStore.removeDecal(chunk, decal);
+				ServerDecalStore.removeDecal(chunk, decal);
+				player.addStat(NonRegistryLibrary.decalsRemoved, 1);
 			}
 			LogHelper.info(decal);
 		}

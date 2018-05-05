@@ -3,3 +3,4 @@ item.finishingtouch:decal_wand.name=Decal Wand
 gui.finishingtouch:decal_selector.decallibrary=Decal Library
 gui.finishingtouch:decal_selector.included=Included
 gui.finishingtouch:decal_selector.community=Community
+gui.finishingtouch:decal_wand.howtoopen=Hold Crouch and press Place Block to open the Decal Library

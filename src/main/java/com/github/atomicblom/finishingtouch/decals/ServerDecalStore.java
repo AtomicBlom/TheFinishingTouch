@@ -4,12 +4,14 @@ import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import javax.annotation.Nullable;
 import java.util.Map;
 
-public class DecalStore
+public final class ServerDecalStore
 {
 	private static final Map<Integer, Map<Long, DecalList>> decalStore = Maps.newHashMap();
+
+	private ServerDecalStore() {}
 
 	public static void addDecal(Chunk chunk, Decal decal)
 	{
@@ -18,6 +20,7 @@ public class DecalStore
 		LogHelper.info("Decal added to server store: {}", decal);
 
 		decalList.add(decal);
+		chunk.markDirty();
 	}
 
 	public static void removeDecal(Chunk chunk, Decal decal)
@@ -25,18 +28,20 @@ public class DecalStore
 		final DecalList decalList = getDecalsInChunk(chunk);
 		if (decalList == null) return;
 		LogHelper.info("Decal removed from server store: {}", decal);
-		decalList.decals.removeIf(d -> d.Is(decal));
+		decalList.decals.removeIf(decalInList -> decalInList.Is(decal));
+		chunk.markDirty();
 	}
 
+	@Nullable
 	public static DecalList getDecalsInChunk(Chunk chunk) {
-		if (!chunk.isLoaded()) return null;
+		if (chunk == null || !chunk.isLoaded()) return null;
 
 		final int dimension = chunk.getWorld().provider.getDimension();
 
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
 
 		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-		return dimensionChunkMap.computeIfAbsent(chunkPos, k -> new DecalList(chunk.x, chunk.z));
+		return dimensionChunkMap.computeIfAbsent(chunkPos, key -> new DecalList(chunk.x, chunk.z));
 	}
 
 	public static void releaseChunk(Chunk chunk) {
@@ -45,5 +50,10 @@ public class DecalStore
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
 		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
 		dimensionChunkMap.remove(chunkPos);
+	}
+
+	public static void clearAllDecals()
+	{
+		decalStore.clear();
 	}
 }

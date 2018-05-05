@@ -1,7 +1,7 @@
 package com.github.atomicblom.finishingtouch.network;
 
 import com.github.atomicblom.finishingtouch.decals.Decal;
-import com.github.atomicblom.finishingtouch.decals.RenderableDecalStore;
+import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.world.chunk.Chunk;
@@ -25,12 +25,12 @@ public class SendDecalEventToClientMessageHandler implements IMessageHandler<Sen
 		{
 			for (Decal decal : decalList)
 			{
-				RenderableDecalStore.addDecal(chunk, decal);
+				ClientDecalStore.addDecal(chunk, decal);
 			}
 		} else {
 			for (Decal decal : decalList)
 			{
-				RenderableDecalStore.removeDecal(chunk, decal);
+				ClientDecalStore.removeDecal(chunk, decal);
 			}
 		}
 

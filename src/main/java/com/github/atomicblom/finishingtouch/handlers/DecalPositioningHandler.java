@@ -1,40 +1,41 @@
 package com.github.atomicblom.finishingtouch.handlers;
 
+import com.github.atomicblom.finishingtouch.NonRegistryLibrary;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.ItemLibrary;
 import com.github.atomicblom.finishingtouch.TheFinishingTouch;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
-import com.github.atomicblom.finishingtouch.decals.RenderableDecalStore;
+import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import com.github.atomicblom.finishingtouch.network.DecalAction;
 import com.github.atomicblom.finishingtouch.network.DecalMessage;
-import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.PlaneProjection;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import javax.annotation.Nullable;
 
 @EventBusSubscriber(Side.CLIENT)
 public final class DecalPositioningHandler
 {
-	private static KeyBinding keyBindUseItem = null;
-	private static KeyBinding keyBindSneak = null;
 	private static EntityPlayerSP player = null;
-	private static boolean isPlacing = false;
 	private static final Minecraft minecraft = Minecraft.getMinecraft();
+
+	private static boolean isPlacing = false;
+	private static boolean isRemoving = false;
 
 	private static EnumFacing orientation = EnumFacing.UP;
 
@@ -44,7 +45,10 @@ public final class DecalPositioningHandler
 	private static double scale = 1;
 	private static EnumDecalType decalType;
 	private static String decalLocation;
-	private static Decal decalToRemove;
+	@Nullable
+	private static Decal decalToRemove = null;
+	private static boolean awaitingFinalRemoveConfirmation = false;
+
 
 	public static boolean isPlacing() {
 		return isPlacing && placeReference != null;
@@ -83,48 +87,65 @@ public final class DecalPositioningHandler
 			return;
 		}
 
-		final boolean isHoldingPlaceButton = keyBindUseItem.isKeyDown();
-		final boolean snap = keyBindSneak.isKeyDown();
-
 		final RayTraceResult objectMouseOver = minecraft.objectMouseOver;
-		final ItemStack decalWand = player.getHeldItemMainhand();
-		final NBTTagCompound tagCompound = decalWand.getTagCompound();
+		final NBTTagCompound wandNBT = player.getHeldItemMainhand().getTagCompound();
 
-		if (!isPlacing && !isHoldingPlaceButton && objectMouseOver.typeOfHit == Type.BLOCK) {
-			//Verify current mouseover decal.
+		final boolean isRequestingDecalAction = NonRegistryLibrary.keyBindUseItem.isKeyDown();
+		final boolean isRequestingRemoveDecal = NonRegistryLibrary.removeDecalBinding.isKeyDown();
+		final boolean snap = NonRegistryLibrary.keyBindSneak.isKeyDown();
 
-			if (tagCompound == null || tagCompound.hasNoTags()) {
-				decalToRemove = checkHighlightedDecal(objectMouseOver, decalToRemove);
-			} else {
+		if (isRequestingRemoveDecal) {
+			decalToRemove = checkHighlightedDecal(objectMouseOver, decalToRemove);
+			isRemoving = true;
+		} else {
+			decalToRemove = null;
+			isRemoving = false;
+		}
+
+		//Removal has precidence.
+		if (isRemoving) {
+			if (isRequestingDecalAction)
+			{
+				awaitingFinalRemoveConfirmation = true;
+			} else if (awaitingFinalRemoveConfirmation)
+			{
+				removeDecal();
 				decalToRemove = null;
+				isRemoving = false;
+				awaitingFinalRemoveConfirmation = false;
 			}
-		}
+		} else {
+			final boolean hasDecal = wandNBT != null && !wandNBT.hasNoTags();
 
-		if (!isPlacing && isHoldingPlaceButton && objectMouseOver.typeOfHit == Type.BLOCK) {
-			orientation = objectMouseOver.sideHit;
-			origin = objectMouseOver.hitVec;
-			if (tagCompound != null && !tagCompound.hasNoTags())
+			if (!isPlacing && isRequestingDecalAction && objectMouseOver.typeOfHit == Type.BLOCK)
 			{
-				decalLocation = tagCompound.getString(Reference.NBT.DecalLocation);
-				decalType = (EnumDecalType.values()[tagCompound.getInteger(Reference.NBT.DecalType)]);
-				isPlacing = true;
-			} else {
-				checkHighlightedDecal(objectMouseOver, decalToRemove);
-				return;
+				orientation = objectMouseOver.sideHit;
+				origin = objectMouseOver.hitVec;
+				if (hasDecal)
+				{
+					decalLocation = wandNBT.getString(Reference.NBT.DecalLocation);
+					decalType = (EnumDecalType.values()[wandNBT.getInteger(Reference.NBT.DecalType)]);
+					isPlacing = true;
+				} else {
+
+					minecraft.ingameGUI.setOverlayMessage(
+							new TextComponentTranslation("gui.finishingtouch:decal_wand.howtoopen"), false
+					);
+				}
 			}
 
-		}
-
-		if (isPlacing) {
-			placeReference = PlaneProjection.calculateProjectedPoint(origin, orientation, player);
-			if (isHoldingPlaceButton)
+			if (isPlacing)
 			{
-				calculateScale();
-				calculateAngle(snap);
-			} else
-			{
-				isPlacing = false;
-				finalizeDecal();
+				placeReference = PlaneProjection.calculateProjectedPoint(origin, orientation, player);
+				if (isRequestingDecalAction)
+				{
+					calculateScale();
+					calculateAngle(snap);
+				} else
+				{
+					isPlacing = false;
+					finalizeDecal();
+				}
 			}
 		}
 	}
@@ -168,7 +189,7 @@ public final class DecalPositioningHandler
 	private static Decal checkDecalsInChunk(int x, int z, RayTraceResult raytrace)
 	{
 		final Chunk chunkFromChunkCoords = player.world.getChunkFromChunkCoords(x, z);
-		final DecalList decalsInChunk = RenderableDecalStore.getDecalsInChunk(chunkFromChunkCoords);
+		final DecalList decalsInChunk = ClientDecalStore.getDecalsInChunk(chunkFromChunkCoords);
 		if (decalsInChunk == null) return null;
 
 		for (final Decal decal : decalsInChunk.decals)
@@ -182,12 +203,10 @@ public final class DecalPositioningHandler
 
 	private static boolean canDoDecalCheck()
 	{
-		if (keyBindUseItem == null || keyBindSneak == null || player == null)
+		if (player == null)
 		{
-			keyBindUseItem = minecraft.gameSettings.keyBindUseItem;
-			keyBindSneak = minecraft.gameSettings.keyBindSneak;
 			player = minecraft.player;
-			if (player == null || keyBindSneak == null || keyBindUseItem == null) return false;
+			if (player == null) return false;
 		}
 
 		final ItemStack heldItemMainhand = player.getHeldItemMainhand();
@@ -245,17 +264,19 @@ public final class DecalPositioningHandler
 	private static void finalizeDecal()
 	{
 		minecraft.addScheduledTask(
-				() -> TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
-						new Decal(
-								origin,
-								orientation,
-								angle,
-								scale,
-								decalType,
-								decalLocation
-						),
-						DecalAction.ADDING
-				)));
+				() -> {
+					TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
+							new Decal(
+									origin,
+									orientation,
+									angle,
+									scale,
+									decalType,
+									decalLocation
+							),
+							DecalAction.ADDING
+					));
+				});
 	}
 
 	public static void reset()

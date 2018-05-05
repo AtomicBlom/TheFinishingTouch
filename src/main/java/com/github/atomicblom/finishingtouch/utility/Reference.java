@@ -24,6 +24,22 @@ public final class Reference
 		}
 	};
 
+	public static final class Stats {
+
+		public static final String DecalsAdded = MOD_ID + ":DecalsAdded";
+		public static final String DecalsRemoved = MOD_ID + ":DecalsRemoved";
+
+		private Stats() {}
+	}
+
+	public static final class Language {
+
+		public static final String DecalsAdded = "stats." +MOD_ID + ":decals_added";
+		public static final String DecalsRemoved = "stats." + MOD_ID + ":decals_removed";
+
+		private Language() {}
+	}
+
 	public static final class Items {
 
 		public static final ResourceLocation DecalWand = resource("decal_wand");

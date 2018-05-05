@@ -55,7 +55,7 @@ public final class DecalPreviewHandler
 			double angle = decalToRemove.getAngle();
 			final double scale = decalToRemove.getScale();
 			final RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
-			final double decalOffset = 0.05;
+			final double decalOffset = 0.02;
 
 			if (DecalPositioningHandler.getDecalType() == EnumDecalType.Loose) {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
@@ -103,7 +103,9 @@ public final class DecalPreviewHandler
 			bufferbuilder.pos(-0.5, 0.5, 0).tex(0, 1).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
 
 			tessellator.draw();
-
+			GlStateManager.disableBlend();
+			GlStateManager.color(1, 1, 1, 1f);
+			GlStateManager.disableTexture2D();
 			GlStateManager.popMatrix();
 			GlStateManager.popAttrib();
 
