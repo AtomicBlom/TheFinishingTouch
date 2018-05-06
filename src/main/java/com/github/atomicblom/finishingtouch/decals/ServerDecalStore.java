@@ -15,9 +15,9 @@ public final class ServerDecalStore
 
 	public static void addDecal(Chunk chunk, Decal decal)
 	{
-		final DecalList decalList = getDecalsInChunk(chunk);
+		final DecalList decalList = getDecalsInChunk(chunk, true);
 		if (decalList == null) return;
-		LogHelper.info("Decal added to server store: {}", decal);
+		//LogHelper.info("Decal added to server store: {}", decal);
 
 		decalList.add(decal);
 		chunk.markDirty();
@@ -25,35 +25,47 @@ public final class ServerDecalStore
 
 	public static void removeDecal(Chunk chunk, Decal decal)
 	{
-		final DecalList decalList = getDecalsInChunk(chunk);
+		final DecalList decalList = getDecalsInChunk(chunk, false);
 		if (decalList == null) return;
-		LogHelper.info("Decal removed from server store: {}", decal);
+		//LogHelper.info("Decal removed from server store: {}", decal);
 		decalList.decals.removeIf(decalInList -> decalInList.Is(decal));
 		chunk.markDirty();
 	}
 
 	@Nullable
-	public static DecalList getDecalsInChunk(Chunk chunk) {
-		if (chunk == null || !chunk.isLoaded()) return null;
+	public static DecalList getDecalsInChunk(Chunk chunk, boolean createIfNeccessary) {
+		if (chunk == null) return null;
 
 		final int dimension = chunk.getWorld().provider.getDimension();
 
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
 
 		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-		return dimensionChunkMap.computeIfAbsent(chunkPos, key -> new DecalList(chunk.x, chunk.z));
+
+		if (createIfNeccessary)
+		{
+			return dimensionChunkMap.computeIfAbsent(chunkPos, key -> {
+				//LogHelper.info("Created DecalList for {},{}", chunk.x, chunk.z);
+				return new DecalList(chunk.x, chunk.z);
+			});
+		} else {
+			return dimensionChunkMap.get(chunkPos);
+		}
 	}
 
 	public static void releaseChunk(Chunk chunk) {
 		final int dimension = chunk.getWorld().provider.getDimension();
 
-		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
-		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-		dimensionChunkMap.remove(chunkPos);
+		final Map<Long, DecalList> dimensionChunkMap = decalStore.get(dimension);
+		if (dimensionChunkMap != null)
+		{
+			final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
+			dimensionChunkMap.remove(chunkPos);
+		}
 	}
 
-	public static void clearAllDecals()
+	public static void clearAllDecalsForDimension(int dimension)
 	{
-		decalStore.clear();
+		decalStore.remove(dimension);
 	}
 }
