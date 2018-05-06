@@ -9,8 +9,10 @@ import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import com.github.atomicblom.finishingtouch.network.DecalAction;
 import com.github.atomicblom.finishingtouch.network.DecalMessage;
+import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.PlaneProjection;
 import com.github.atomicblom.finishingtouch.utility.Reference;
+import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.item.ItemStack;
@@ -27,6 +29,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
 
 @EventBusSubscriber(Side.CLIENT)
 public final class DecalPositioningHandler
@@ -96,10 +100,16 @@ public final class DecalPositioningHandler
 
 		if (isRequestingRemoveDecal) {
 			decalToRemove = checkHighlightedDecal(objectMouseOver, decalToRemove);
-			isRemoving = true;
+			if (decalToRemove != null && !isRemoving)
+			{
+				isRemoving = true;
+			}
 		} else {
-			decalToRemove = null;
-			isRemoving = false;
+			if (isRemoving || decalToRemove != null)
+			{
+				decalToRemove = null;
+				isRemoving = false;
+			}
 		}
 
 		//Removal has precidence.
@@ -127,7 +137,6 @@ public final class DecalPositioningHandler
 					decalType = (EnumDecalType.values()[wandNBT.getInteger(Reference.NBT.DecalType)]);
 					isPlacing = true;
 				} else {
-
 					minecraft.ingameGUI.setOverlayMessage(
 							new TextComponentTranslation("gui.finishingtouch:decal_wand.howtoopen"), false
 					);
@@ -152,53 +161,80 @@ public final class DecalPositioningHandler
 
 	private static Decal checkHighlightedDecal(RayTraceResult objectMouseOver, Decal currentlyHighligtedDecal)
 	{
-		if (currentlyHighligtedDecal != null && checkDecalHit(objectMouseOver, currentlyHighligtedDecal)) {
-			return currentlyHighligtedDecal;
+		if (currentlyHighligtedDecal != null) {
+			Double distance = checkDecalHit(currentlyHighligtedDecal);
+			if (distance != null)
+			{
+				return currentlyHighligtedDecal;
+			}
 		}
 
 		final ChunkPos chunkPos = new ChunkPos(objectMouseOver.getBlockPos());
 
-		Decal hitDecal = checkDecalsInChunk(chunkPos.x, chunkPos.z, objectMouseOver);
-		if (hitDecal != null) return hitDecal;
+		/*Decal hitDecal = addDecalsOnPlane(chunkPos.x, chunkPos.z, objectMouseOver);
+		if (hitDecal != null) {
+			return hitDecal;
+		}*/
+
+
+		List<DecalDistance> decalsOnPlane = Lists.newArrayList();
 
 		for (int z = -1; z <= 1; ++z) {
 			for (int x = -1; x <= 1; ++x) {
-				if (z == 0 && x == 0) continue;
-				hitDecal = checkDecalsInChunk(x, z, objectMouseOver);
-				if (hitDecal != null) return hitDecal;
+				addDecalsOnPlane(chunkPos.x + x, chunkPos.z + z, objectMouseOver, decalsOnPlane);
 			}
 		}
 
-		return hitDecal;
+		if (decalsOnPlane.isEmpty()) return null;
+
+		//decalsOnPlane.sort(Comparator.comparingDouble(decalDistance -> decalDistance.distance));
+		decalsOnPlane.sort((decalDistance, t1) -> Double.compare(t1.distance, decalDistance.distance));
+
+		Decal closestDecal = decalsOnPlane.get(0).decal;
+		return closestDecal;
 	}
 
-	private static boolean checkDecalHit(RayTraceResult raytrace, Decal decal)
-	{
-		if (decal.getOrientation() != raytrace.sideHit) return false;
-		final Vec3d pointOnPlane = PlaneProjection.calculateProjectedPoint(origin, orientation, player);
-//		LogHelper.info("Checking removal of decal: {}", decal);
-//		LogHelper.info("Point on plane: {}", pointOnPlane);
-		if (pointOnPlane != null) {
-			if (pointOnPlane.distanceTo(raytrace.hitVec) < decal.getScale()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static Decal checkDecalsInChunk(int x, int z, RayTraceResult raytrace)
+	private static void addDecalsOnPlane(int x, int z, RayTraceResult raytrace, List<DecalDistance> decalsOnPlane)
 	{
 		final Chunk chunkFromChunkCoords = player.world.getChunkFromChunkCoords(x, z);
 		final DecalList decalsInChunk = ClientDecalStore.getDecalsInChunk(chunkFromChunkCoords);
-		if (decalsInChunk == null) return null;
+		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;
 
 		for (final Decal decal : decalsInChunk.decals)
 		{
-			if (checkDecalHit(raytrace, decal)) {
-				return decal;
+			if (decal.getOrientation() != raytrace.sideHit) continue;
+			Double distance = checkDecalHit(decal);
+			if (distance != null) {
+				decalsOnPlane.add(new DecalDistance(decal, distance));
+			}
+		}
+	}
+
+	private static Double checkDecalHit(Decal decal)
+	{
+		final Vec3d pointOnPlane = PlaneProjection.calculateProjectedPoint(origin, orientation, player);
+
+		if (pointOnPlane != null) {
+			double distance = pointOnPlane.distanceTo(decal.getOrigin()) / 2;
+			//LogHelper.info("Checking removal of decal: {}", decal);
+			//LogHelper.info("Distance: {}, Point on plane: {}", distance, pointOnPlane);
+			if (distance < decal.getScale()) {
+				//return pointOnPlane.distanceTo(player.getPositionEyes(0));
+				return distance;
 			}
 		}
 		return null;
+	}
+
+	private static class DecalDistance {
+		double distance;
+		Decal decal;
+
+		public DecalDistance(Decal decal, double distance) {
+
+			this.decal = decal;
+			this.distance = distance;
+		}
 	}
 
 	private static boolean canDoDecalCheck()
@@ -242,11 +278,7 @@ public final class DecalPositioningHandler
 
 	private static void calculateScale()
 	{
-		scale = MathHelper.sqrt(
-				StrictMath.pow(origin.x - placeReference.x, 2) +
-						StrictMath.pow(origin.y - placeReference.y, 2) +
-						StrictMath.pow(origin.z - placeReference.z, 2)
-		) * 2;
+		scale = origin.distanceTo(placeReference) * 2;
 
 		if (scale > 16) {
 			scale = 16;
@@ -254,11 +286,16 @@ public final class DecalPositioningHandler
 	}
 
 	private static void removeDecal() {
-		minecraft.addScheduledTask(
-				() -> TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
-						decalToRemove,
-						DecalAction.REMOVING
-				)));
+		if (decalToRemove != null)
+		{
+			minecraft.addScheduledTask(
+					() -> TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
+							decalToRemove,
+							DecalAction.REMOVING
+					)));
+		} else {
+			LogHelper.info("WTF, tried to remove a null decal?");
+		}
 	}
 
 	private static void finalizeDecal()
@@ -296,6 +333,6 @@ public final class DecalPositioningHandler
 
 	public static boolean isRemoving()
 	{
-		return decalToRemove != null;
+		return isRemoving;
 	}
 }

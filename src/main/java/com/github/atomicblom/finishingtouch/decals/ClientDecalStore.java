@@ -31,7 +31,7 @@ public final class ClientDecalStore
 
 		decalList.add(decal);
 		dimensionChunkMap.setNeedsUpdating();
-		LogHelper.info("Decal added to client store: {}", decal);
+		//LogHelper.info("Decal added to client store: {}", decal);
 
 		//FIXME: start preparing the decal display list
 	}
@@ -54,7 +54,7 @@ public final class ClientDecalStore
 		decalList.decals.removeIf(decalInList -> decalInList.Is(decal));
 
 		dimensionChunkMap.setNeedsUpdating();
-		LogHelper.info("Decal removed from client store: {}", decal);
+		//LogHelper.info("Decal removed from client store: {}", decal);
 	}
 
 	public static DecalList getDecalsInChunk(Chunk chunk) {
