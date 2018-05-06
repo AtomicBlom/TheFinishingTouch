@@ -2,13 +2,11 @@ package com.github.atomicblom.finishingtouch.handlers;
 
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
-import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
@@ -55,7 +53,7 @@ public final class DecalPreviewHandler
 			double angle = decalToRemove.getAngle();
 			final double scale = decalToRemove.getScale();
 			final RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
-			final double decalOffset = 0.02;
+			final double decalOffset = 0.04;
 
 			if (DecalPositioningHandler.getDecalType() == EnumDecalType.Loose) {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
@@ -75,6 +73,7 @@ public final class DecalPreviewHandler
 
 			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			GlStateManager.enableBlend();
+			GlStateManager.depthMask(false);
 			GlStateManager.color(1, 0, 0, 0.8f);
 			GlStateManager.enableTexture2D();
 
@@ -103,9 +102,9 @@ public final class DecalPreviewHandler
 			bufferbuilder.pos(-0.5, 0.5, 0).tex(0, 1).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
 
 			tessellator.draw();
-			GlStateManager.disableBlend();
-			GlStateManager.color(1, 1, 1, 1f);
-			GlStateManager.disableTexture2D();
+			//GlStateManager.disableBlend();
+			//GlStateManager.color(1, 1, 1, 1f);
+			//GlStateManager.disableTexture2D();
 			GlStateManager.popMatrix();
 			GlStateManager.popAttrib();
 
@@ -153,8 +152,8 @@ public final class DecalPreviewHandler
 			tessellator.draw();
 
 			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-
 			GlStateManager.enableTexture2D();
+
 			bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
 			GlStateManager.pushMatrix();
@@ -191,19 +190,4 @@ public final class DecalPreviewHandler
 		}
 	}
 
-	public static class RenderHelp {
-		//Simply for context
-		private final EnumFacing facing;
-		public final double rotation;
-		public final boolean invertedRotation;
-		public final boolean flipTexture;
-
-		RenderHelp(EnumFacing facing, double rotation, boolean invertedRotation, boolean flipTexture) {
-
-			this.facing = facing;
-			this.rotation = rotation;
-			this.invertedRotation = invertedRotation;
-			this.flipTexture = flipTexture;
-		}
-	}
 }

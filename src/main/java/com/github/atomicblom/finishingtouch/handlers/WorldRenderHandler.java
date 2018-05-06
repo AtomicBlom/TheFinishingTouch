@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
@@ -26,31 +27,30 @@ public final class WorldRenderHandler
 {
 	@SubscribeEvent
 	public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
-		Minecraft minecraft = Minecraft.getMinecraft();
-		EntityPlayerSP player = minecraft.player;
-		float partialTicks = event.getPartialTicks();
+		final Minecraft minecraft = Minecraft.getMinecraft();
+		final EntityPlayerSP player = minecraft.player;
+		final float partialTicks = event.getPartialTicks();
 
-		double playerX = player.prevPosX + (player.posX - player.prevPosX) * partialTicks;
-		double playerY = player.prevPosY + (player.posY - player.prevPosY) * partialTicks;
-		double playerZ = player.prevPosZ + (player.posZ - player.prevPosZ) * partialTicks;
+		final double playerX = player.prevPosX + (player.posX - player.prevPosX) * partialTicks;
+		final double playerY = player.prevPosY + (player.posY - player.prevPosY) * partialTicks;
+		final double playerZ = player.prevPosZ + (player.posZ - player.prevPosZ) * partialTicks;
 
-		Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension, player.getPosition());
+		final Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension, player.getPosition());
+
 		GlStateManager.pushAttrib();
 		GlStateManager.disableBlend();
 		GlStateManager.enableAlpha();
+		GlStateManager.depthMask(false);
 		GlStateManager.resetColor();
-		GlStateManager.depthMask(true);
 		GlStateManager.enableTexture2D();
 
-		//minecraft.getTextureManager().bindTexture(new ResourceLocation(Reference.MOD_ID, "textures/vegeta897_theres_a_hole_in_the_forum.png"));
-
-		final DecalPreviewHandler.RenderHelp[] EnumFacingFixes = {
-				new DecalPreviewHandler.RenderHelp(EnumFacing.DOWN, 0, false, true),
-				new DecalPreviewHandler.RenderHelp(EnumFacing.UP, 0, true, false),
-				new DecalPreviewHandler.RenderHelp(EnumFacing.NORTH, 90, false, false),
-				new DecalPreviewHandler.RenderHelp(EnumFacing.SOUTH, -90, true, true),
-				new DecalPreviewHandler.RenderHelp(EnumFacing.WEST, -90, true, false),
-				new DecalPreviewHandler.RenderHelp(EnumFacing.EAST, 90  , false, true),
+		final RenderHelp[] EnumFacingFixes = {
+				new RenderHelp(EnumFacing.DOWN, 0, false, true),
+				new RenderHelp(EnumFacing.UP, 0, true, false),
+				new RenderHelp(EnumFacing.NORTH, 90, false, false),
+				new RenderHelp(EnumFacing.SOUTH, -90, true, true),
+				new RenderHelp(EnumFacing.WEST, -90, true, false),
+				new RenderHelp(EnumFacing.EAST, 90  , false, true),
 		};
 
 		for (final DecalList decalList : decalsAround)
@@ -62,7 +62,7 @@ public final class WorldRenderHandler
 				}
 
 				final EnumFacing orientation = decal.getOrientation();
-				final DecalPreviewHandler.RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
+				final RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
 
 				final Vec3d origin = decal.getOrigin();
 				double angle = decal.getAngle();
@@ -88,7 +88,7 @@ public final class WorldRenderHandler
 					angle = -angle;
 				}
 
-				final EnumFacing.Axis axis = orientation.getAxis();
+				final Axis axis = orientation.getAxis();
 				GlStateManager.rotate((float)( angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
 				switch (axis) {
 					case X:
