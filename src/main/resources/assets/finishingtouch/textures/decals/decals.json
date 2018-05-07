@@ -2,7 +2,7 @@
   {
     "Artist": "Rorax",
     "Site": "http://twitter.com/Rosespikes",
-    "SiteName": "Twitter",
+    "SiteName": "@Rosespikes",
     "Decals": [
       {
         "Name": "Sparse Hay",
@@ -15,6 +15,17 @@
       {
         "Name": "Turn Arrow (dilapidated)",
         "Location": "finishingtouch:textures/decals/turn_arrow_old"
+      }
+    ]
+  },
+  {
+    "Artist": "AtomicBlom",
+    "Site": "http://twitter.com/AtomicBlom",
+    "SiteName": "@AtomicBlom",
+    "Decals": [
+      {
+        "Name": "Exposed Rock",
+        "Location": "finishingtouch:textures/decals/atomicblom_exposed_rock"
       }
     ]
   }
