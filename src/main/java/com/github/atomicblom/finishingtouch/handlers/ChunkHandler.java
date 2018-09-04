@@ -39,9 +39,13 @@ public final class ChunkHandler
 			ServerDecalStore.addDecal(event.getChunk(), decal);
 		}
 
-		//DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(event.getChunk(), false);
-		//int numberOfDecalsInChunk = decalsInChunk == null ? 0 : decalsInChunk.decals.size();
-		//LogHelper.info("Loading Chunk {},{} - {} decals", event.getChunk().x, event.getChunk().z, numberOfDecalsInChunk);
+		DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(event.getChunk(), false);
+		int numberOfDecalsInChunk = decalsInChunk == null ? 0 : decalsInChunk.decals.size();
+		if (numberOfDecalsInChunk > 0)
+		{
+			LogHelper.info("Loading Chunk {},{} - {} decals", event.getChunk().x, event.getChunk().z, numberOfDecalsInChunk);
+		}
+
 	}
 
 	@SubscribeEvent
@@ -57,14 +61,19 @@ public final class ChunkHandler
 
 		event.getData().setTag(NBT.ChunkDecals, decalData);
 
-		//LogHelper.info("Saving Chunk {},{} - {} decals", chunk.x, chunk.z, decalsInChunk.decals.size());
+		if (!decalsInChunk.decals.isEmpty())
+		{
+			LogHelper.info("Saving Chunk {},{} - {} decals", chunk.x, chunk.z, decalsInChunk.decals.size());
+		}
 	}
 
 	@SubscribeEvent
 	public static void chunkUnload(Unload event) {
-
-		Chunk chunk = event.getChunk();
-		ServerDecalStore.releaseChunk(chunk);
+		if (!event.getWorld().isRemote)
+		{
+			Chunk chunk = event.getChunk();
+			ServerDecalStore.releaseChunk(chunk);
+		}
 	}
 
 	@SubscribeEvent

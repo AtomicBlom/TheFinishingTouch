@@ -67,8 +67,6 @@ public final class WorldRenderHandler
 			GlStateManager.color(1, 0, 0, 0.8f);
 
 			renderFromDecal(textureManager, playerX, playerY, playerZ, DecalPositioningHandler.getDecalToRemove());
-
-
 		} else if (DecalPositioningHandler.isPlacing()) {
 			final Tessellator tessellator = Tessellator.getInstance();
 
@@ -80,12 +78,10 @@ public final class WorldRenderHandler
 			final String location = DecalPositioningHandler.getDecalLocation();
 			final EnumDecalType decalRenderType = DecalPositioningHandler.getDecalType();
 
-
 			final Vec3i normal = orientation.getOpposite().getDirectionVec();
 			final double x = origin.x - playerX + normal.getX() * decalOffset;
 			final double y = origin.y - playerY + normal.getY() * decalOffset;
 			final double z = origin.z - playerZ + normal.getZ() * decalOffset;
-
 
 			render(textureManager, tessellator, decalRenderType, orientation, angle, scale, normal, x, y, z, location);
 

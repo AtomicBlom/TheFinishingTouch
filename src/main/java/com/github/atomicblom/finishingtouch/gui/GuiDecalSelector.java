@@ -7,6 +7,7 @@ import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiConfirmOpenLink;
@@ -41,8 +42,10 @@ public class GuiDecalSelector extends GuiScreen {
     private int guiLeft;
     private int guiTop;
     private List<RenderableSlot> builtinDecals = null;
+    private final List<RenderableSlot> communityDecals = Lists.newArrayList();
+    private SelectedTab selectedTab = SelectedTab.BUILT_IN;
 
-    private static final int page = 0;
+    private int page = 0;
 
     private static final int itemsPerRow = 9;
     private static final int itemsPerColumn = 5;
@@ -184,8 +187,8 @@ public class GuiDecalSelector extends GuiScreen {
     private int drawDecalPage(List<RenderableSlot> decalList) {
         int currentItem = getDecalPageStart(decalList);
         final int totalDecals = decalList.size();
-        for (int y = 0; y < itemsPerRow; ++y) {
-            for (int x = 0; x < itemsPerColumn; ++x) {
+        for (int y = 0; y < itemsPerColumn; ++y) {
+            for (int x = 0; x < itemsPerRow; ++x) {
                 if (currentItem < totalDecals) {
                     final RenderableSlot renderableSlot = decalList.get(currentItem);
                     final int renderX = slotOffsetX + x * (iconWidth + iconPadding);
@@ -221,8 +224,10 @@ public class GuiDecalSelector extends GuiScreen {
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
     {
         mc.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
-        drawTexturedModalRect(82, 17, 0, 134, 138, 12);
-        drawTexturedModalRect(140, 11, 138, 134, 6, 13);
+        int tabOffset = selectedTab == SelectedTab.COMMUNITY ? 12 : 0;
+        int clippyOffset = selectedTab == SelectedTab.COMMUNITY ? 68 : 0;
+        drawTexturedModalRect(82, 17, 0, 134 + tabOffset, 138, 12);
+        drawTexturedModalRect(140+ clippyOffset, 11, 138, 134, 6, 13);
         drawTexturedModalRect(137, 119, 144, 134, 6, 13);
         drawTexturedModalRect(185, 119, 150, 134, 6, 13);
 
@@ -259,9 +264,15 @@ public class GuiDecalSelector extends GuiScreen {
             }
         }
 
-        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.included"), 86, 20, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.community"), 158, 20, 0xFF808080);
+        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.included"), 86, 20,  selectedTab == SelectedTab.BUILT_IN ? 0xFFFFFFFF : 0xFF808080);
+        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.community"), 158, 20, selectedTab == SelectedTab.COMMUNITY ? 0xFFFFFFFF : 0xFF808080);
         fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ":decal_selector.decallibrary"), 7, 6, 4210752);
+
+        if (selectedTab == SelectedTab.COMMUNITY) {
+            String comingSoonText = I18n.format("gui."+Reference.MOD_ID + ":decal_selector.comingsoon");
+            int comingSoonWidth = 162 / 2 - fontRenderer.getStringWidth(comingSoonText) / 2 + 83;
+            fontRenderer.drawString(comingSoonText, comingSoonWidth, 70, 0xFFFFFFFF);
+        }
     }
 
     @Override
@@ -272,7 +283,57 @@ public class GuiDecalSelector extends GuiScreen {
         if (mouseButton == 0) {
             if (trySelectDecal(mouseX, mouseY)) return;
             if (trySelectArtistLink(adjustedMouseX, adjustedMouseY)) return;
+            if (tryChangePageBack(adjustedMouseX, adjustedMouseY)) return;
+            if (tryChangePageForward(adjustedMouseX, adjustedMouseY)) return;
+            if (trySelectComunityTab(adjustedMouseX, adjustedMouseY)) return;
+            if (trySelectBuiltInTab(adjustedMouseX, adjustedMouseY)) return;
         }
+    }
+
+    private boolean trySelectBuiltInTab(int mouseX, int mouseY)
+    {
+        if (selectedTab == SelectedTab.BUILT_IN) return false;
+        if (mouseX < 82 || mouseX > 82 + 65) return false;
+        if (mouseY < 17 || mouseY > 17 + 11) return false;
+
+        selectedTab = SelectedTab.BUILT_IN;
+        page = 0;
+        visibleDecalList = builtinDecals;
+
+        return true;
+    }
+
+    private boolean trySelectComunityTab(int mouseX, int mouseY)
+    {
+        if (selectedTab == SelectedTab.COMMUNITY) return false;
+        if (mouseX < 82 + 72 || mouseX > 82 + 72 + 66) return false;
+        if (mouseY < 17 || mouseY > 17 + 11) return false;
+
+        selectedTab = SelectedTab.COMMUNITY;
+        page = 0;
+        visibleDecalList = communityDecals;
+
+        return true;
+    }
+
+    private boolean tryChangePageBack(int mouseX, int mouseY) {
+        if (mouseX < 137 || mouseX > 137 + 6) return false;
+        if (mouseY < 119 || mouseY > 119 + 13) return false;
+        if (page > 0) {
+            page--;
+        }
+
+        return true;
+    }
+
+    private boolean tryChangePageForward(int mouseX, int mouseY) {
+        if (mouseX < 185 || mouseX > 185 + 6) return false;
+        if (mouseY < 119 || mouseY > 119 + 13) return false;
+        if (page < visibleDecalList.size() / itemsPerPage) {
+            page++;
+        }
+
+        return true;
     }
 
     private boolean trySelectArtistLink(int mouseX, int mouseY)
@@ -372,4 +433,9 @@ public class GuiDecalSelector extends GuiScreen {
 
         return adjustedMouseY / iconSize;
     }
+}
+
+enum SelectedTab {
+    BUILT_IN,
+    COMMUNITY
 }

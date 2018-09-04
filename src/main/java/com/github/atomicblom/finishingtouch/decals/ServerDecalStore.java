@@ -2,6 +2,8 @@ package com.github.atomicblom.finishingtouch.decals;
 
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import javax.annotation.Nullable;
@@ -9,7 +11,7 @@ import java.util.Map;
 
 public final class ServerDecalStore
 {
-	private static final Map<Integer, Map<Long, DecalList>> decalStore = Maps.newHashMap();
+	private static final Map<Integer, Long2ObjectMap<DecalList>> decalStore = Maps.newHashMap();
 
 	private ServerDecalStore() {}
 
@@ -38,7 +40,7 @@ public final class ServerDecalStore
 
 		final int dimension = chunk.getWorld().provider.getDimension();
 
-		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
+		final Long2ObjectMap<DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new Long2ObjectOpenHashMap<>(8192));
 
 		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
 
@@ -56,16 +58,21 @@ public final class ServerDecalStore
 	public static void releaseChunk(Chunk chunk) {
 		final int dimension = chunk.getWorld().provider.getDimension();
 
-		final Map<Long, DecalList> dimensionChunkMap = decalStore.get(dimension);
+		final Long2ObjectMap<DecalList> dimensionChunkMap = decalStore.get(dimension);
 		if (dimensionChunkMap != null)
 		{
 			final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-			dimensionChunkMap.remove(chunkPos);
+			if (dimensionChunkMap.containsKey(chunkPos))
+			{
+				dimensionChunkMap.remove(chunkPos);
+			}
+
 		}
 	}
 
 	public static void clearAllDecalsForDimension(int dimension)
 	{
 		decalStore.remove(dimension);
+		LogHelper.info("Cleared all decals in dimension {}", dimension);
 	}
 }
