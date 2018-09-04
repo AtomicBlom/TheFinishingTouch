@@ -239,10 +239,10 @@ public final class DecalPositioningHandler
 
 	private static boolean canDoDecalCheck()
 	{
-		if (player == null)
+		if (player == null || player.isDead)
 		{
 			player = minecraft.player;
-			if (player == null) return false;
+			if (player == null || player.isDead) return false;
 		}
 
 		final ItemStack heldItemMainhand = player.getHeldItemMainhand();
