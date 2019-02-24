@@ -7,7 +7,6 @@ configFile.withReader {
     project.ext.config = new ConfigSlurper().parse prop
 }
 
-// For those who want the bleeding edge
 buildscript {
     repositories {
         jcenter()
@@ -15,14 +14,15 @@ buildscript {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
 }
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle'
 
 ///////////////////////////////////////////////////
 // ForgeGradle
@@ -32,57 +32,81 @@ group = config.group_name
 archivesBaseName = "${config.mod_id}-${config.minecraft_version}"
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
+compileJava.sourceCompatibility = JavaVersion.VERSION_1_8
+compileJava.targetCompatibility = JavaVersion.VERSION_1_8
 
 minecraft {
-    version = config.minecraft_version + "-" + config.forge_version // grab latest forge
-    runDir = "run"
+    mappings channel: config.mcp_channel, version: config.mcp_version
+    //makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
-    mappings = config.mcp_mappings
-    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    //accessTransformer = file('my_at.cfg')
 
-    replace '@MOD_VERSION@', version
-    replace '@MOD_ID@', config.mod_id
-    replace '@CI_BUILD@', hasProperty("CIRevision") ? 'true' : 'false'
-}
+    //replace '@MOD_VERSION@', version
+    //replace '@MOD_ID@', config.mod_id
+    //replace '@CI_BUILD@', hasProperty("CIRevision") ? 'true' : 'false'
 
-processResources
-        {
-            // this will ensure that this task is redone when the versions change.
-            inputs.property "version", project.version
-            inputs.property "mcversion", project.minecraft.version
-
-            // replace stuff in mcmod.info, nothing else
-            from(sourceSets.main.resources.srcDirs) {
-                include '**/*.info'
-                include '**/*.properties'
-
-                // replace version and mcversion
-                expand ([
-                        'version':project.version,
-                        'mcversion':project.minecraft.version,
-                        'forge_version': config.forge_version,
-                        'mod_version': config.mod_version,
-                        'minecraft_version': config.minecraft_version
-                ])
-            }
-
-            // copy everything else, thats not the mcmod.info
-            from(sourceSets.main.resources.srcDirs) {
-                exclude 'mcmod.info'
-            }
+    runs {
+        client = {
+            // recommended logging data for a userdev environment
+            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
         }
-
-//jar {
-//    classifier = 'universal'
-//    manifest {
-//        attributes 'FMLAT': config.mod_id + '_at.cfg'
-//    }
-//}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = [ 'src/main/java' ]
+        server = {
+            // recommended logging data for a userdev environment
+            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
         }
     }
 }
+
+dependencies {
+    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
+    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
+    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
+    minecraft 'net.minecraftforge:forge:'+config.minecraft_version+'-'+config.forge_version
+}
+
+// Example for how to get properties into the manifest for reading by the runtime..
+jar {
+    manifest {
+        attributes(["Specification-Title": config.mod_id,
+                    "Specification-Vendor": config.mod_vendor,
+                    "Specification-Version": "24.0", // We are version 1 of the modlauncher specification
+                    "Implementation-Title": project.name,
+                    "Implementation-Version": "${version}",
+                    "Implementation-Vendor" : config.mod_vendor,
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+    }
+}
+
+//processResources {
+//    // this will ensure that this task is redone when the versions change.
+//    inputs.property "version", project.version
+//    inputs.property "mcversion", project.minecraft.version
+//
+//    // replace stuff in mcmod.info, nothing else
+//    from(sourceSets.main.resources.srcDirs) {
+//        include '**/*.info'
+//        include '**/*.properties'
+//
+//        // replace version and mcversion
+//        expand ([
+//                'version':project.version,
+//                'mcversion':project.minecraft.version,
+//                'forge_version': config.forge_version,
+//                'mod_version': config.mod_version,
+//                'minecraft_version': config.minecraft_version
+//        ])
+//    }
+//
+//    // copy everything else, thats not the mcmod.info
+//    from(sourceSets.main.resources.srcDirs) {
+//        exclude 'mcmod.info'
+//    }
+//}

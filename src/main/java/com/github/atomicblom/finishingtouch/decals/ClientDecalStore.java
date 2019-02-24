@@ -24,7 +24,7 @@ public final class ClientDecalStore
 			chunkZ = ((int)decal.getOrigin().z) >> 4;
 		} else if (!chunk.isLoaded()) return;
 
-		final int dimension = chunk.getWorld().provider.getDimension();
+		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 
 		final ClientDimensionDecals dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new ClientDimensionDecals());
 		final DecalList decalList = dimensionChunkMap.getDecalListForChunk(chunkX, chunkZ);
@@ -46,7 +46,7 @@ public final class ClientDecalStore
 			chunkZ = ((int)decal.getOrigin().z) >> 4;
 		} else if (!chunk.isLoaded()) return;
 
-		final int dimension = chunk.getWorld().provider.getDimension();
+		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 
 		final ClientDimensionDecals dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new ClientDimensionDecals());
 		final DecalList decalList = dimensionChunkMap.getDecalListForChunk(chunkX, chunkZ);
@@ -60,7 +60,7 @@ public final class ClientDecalStore
 	public static DecalList getDecalsInChunk(Chunk chunk) {
 		if (!chunk.isLoaded()) return null;
 
-		final int dimension = chunk.getWorld().provider.getDimension();
+		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 		final ClientDimensionDecals dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new ClientDimensionDecals());
 		return dimensionChunkMap.getDecalListForChunk(chunk.x, chunk.z);
 	}

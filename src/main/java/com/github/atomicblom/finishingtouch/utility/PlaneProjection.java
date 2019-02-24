@@ -136,7 +136,7 @@ public final class PlaneProjection
 
 		final float lookX = yawSine * pitchCosine;
 		final float lookZ = yawCosine * pitchCosine;
-		final float playerReach = (float)playerIn.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue();
+		final float playerReach = (float)playerIn.getAttribute(EntityPlayer.REACH_DISTANCE).getValue();
 
 		final Vec3d lookVector = new Vec3d(
 				lookX * playerReach,

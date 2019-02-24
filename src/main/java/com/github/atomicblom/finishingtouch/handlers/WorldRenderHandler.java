@@ -4,6 +4,7 @@ import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
 import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
+import javafx.geometry.Side;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -15,19 +16,19 @@ import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import static net.minecraftforge.fml.common.Mod.*;
 
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Dist.CLIENT)
 public final class WorldRenderHandler
 {
 	@SubscribeEvent
 	public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
-		final Minecraft minecraft = Minecraft.getMinecraft();
+		final Minecraft minecraft = Minecraft.getInstance();
 		final EntityPlayerSP player = minecraft.player;
 		final float partialTicks = event.getPartialTicks();
 
@@ -35,11 +36,11 @@ public final class WorldRenderHandler
 		final double playerY = player.prevPosY + (player.posY - player.prevPosY) * partialTicks;
 		final double playerZ = player.prevPosZ + (player.posZ - player.prevPosZ) * partialTicks;
 
-		final Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension, player.getPosition());
+		final Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension.getId(), player.getPosition());
 
-		GlStateManager.pushAttrib();
+		GlStateManager.pushLightingAttrib();
 		GlStateManager.disableBlend();
-		GlStateManager.enableAlpha();
+		GlStateManager.enableAlphaTest();
 		GlStateManager.depthMask(false);
 		GlStateManager.resetColor();
 		GlStateManager.enableTexture2D();
@@ -82,27 +83,27 @@ public final class WorldRenderHandler
 				bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
 				GlStateManager.pushMatrix();
-				GlStateManager.translate(minX, minY, minZ);
+				GlStateManager.translated(minX, minY, minZ);
 
 				if (enumFixes.invertedRotation) {
 					angle = -angle;
 				}
 
 				final Axis axis = orientation.getAxis();
-				GlStateManager.rotate((float)( angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
+				GlStateManager.rotatef((float)( angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
 				switch (axis) {
 					case X:
-						GlStateManager.rotate(90, 0, 1, 0);
+						GlStateManager.rotatef(90, 0, 1, 0);
 						break;
 					case Y:
-						GlStateManager.rotate(90, 1, 0, 0);
+						GlStateManager.rotatef(90, 1, 0, 0);
 						break;
 				}
 
 				if (enumFixes.flipTexture) {
-					GlStateManager.rotate(180, 0, 1, 0);
+					GlStateManager.rotatef(180, 0, 1, 0);
 				}
-				GlStateManager.scale(scale, scale, scale);
+				GlStateManager.scaled(scale, scale, scale);
 
 				bufferbuilder.pos(0.5, 0.5, 0).tex(1, 1).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
 				bufferbuilder.pos(0.5, -0.5, 0).tex(1, 0).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();

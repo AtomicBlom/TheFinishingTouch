@@ -7,18 +7,20 @@ import com.github.atomicblom.finishingtouch.decals.ServerDecalStore;
 import com.github.atomicblom.finishingtouch.network.SendDecalEventToClientMessage;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
-import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.INBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkDataEvent.Load;
 import net.minecraftforge.event.world.ChunkDataEvent.Save;
 import net.minecraftforge.event.world.ChunkEvent.Unload;
 import net.minecraftforge.event.world.ChunkWatchEvent.Watch;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.network.NetworkDirection;
 
 @EventBusSubscriber
 public final class ChunkHandler
@@ -26,10 +28,10 @@ public final class ChunkHandler
 	@SubscribeEvent
 	public static void chunkLoad(Load event) {
 		final NBTTagCompound data = event.getData();
-		if (!data.hasKey(NBT.ChunkDecals)) return;
+		if (!data.contains(NBT.ChunkDecals)) return;
 
-		final NBTTagList tagList = data.getTagList(NBT.ChunkDecals, Constants.NBT.TAG_COMPOUND);
-		for (final NBTBase nbtBase : tagList) {
+		final NBTTagList tagList = data.getList(NBT.ChunkDecals, Constants.NBT.TAG_COMPOUND);
+		for (final INBTBase nbtBase : tagList) {
 			if (!(nbtBase instanceof NBTTagCompound)) {
 				LogHelper.error("Wrong NBT Type serialized, not loading further decals from chunk");
 				return;
@@ -46,16 +48,21 @@ public final class ChunkHandler
 
 	@SubscribeEvent
 	public static void chunkSave(Save event) {
-		final Chunk chunk = event.getChunk();
+		final IChunk chunk = event.getChunk();
+		if (event.getWorld() == null) {
+			LogHelper.info("Not saving Saving Chunk {},{} - {}", chunk.getPos().x, chunk.getPos().z, chunk.getStatus());
+			return;
+		}
+
 		final DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(chunk, false);
 		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;
 
 		final NBTTagList decalData = new NBTTagList();
 		for (final Decal decal : decalsInChunk.decals) {
-			decalData.appendTag(Decal.asNBT(decal));
+			decalData.add(Decal.asNBT(decal));
 		}
 
-		event.getData().setTag(NBT.ChunkDecals, decalData);
+		event.getData().put(NBT.ChunkDecals, decalData);
 
 		//LogHelper.info("Saving Chunk {},{} - {} decals", chunk.x, chunk.z, decalsInChunk.decals.size());
 	}
@@ -63,35 +70,39 @@ public final class ChunkHandler
 	@SubscribeEvent
 	public static void chunkUnload(Unload event) {
 
-		Chunk chunk = event.getChunk();
+		IChunk chunk = event.getChunk();
 		ServerDecalStore.releaseChunk(chunk);
 	}
 
 	@SubscribeEvent
 	public static void chunkWatch(Watch event) {
-		final Chunk chunk = event.getChunkInstance();
+		final IChunk chunk = event.getChunk();
 		final DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(chunk, false);
 
 		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;
 		//LogHelper.info("Player watching chunk Chunk {},{} - {} decals", chunk.x, chunk.z, decalsInChunk.decals.size());
 
-		TheFinishingTouch.CHANNEL.sendTo(new SendDecalEventToClientMessage(decalsInChunk.decals), event.getPlayer());
+		TheFinishingTouch.CHANNEL.sendTo(
+				new SendDecalEventToClientMessage(event.getWorld().getWorldInfo().getDimension(), decalsInChunk.decals),
+				event.getPlayer().connection.getNetworkManager(),
+				NetworkDirection.PLAY_TO_CLIENT
+		);
 	}
 
 	@SubscribeEvent
 	public static void onWorldUnload(WorldEvent.Unload event) {
-		if (!event.getWorld().isRemote)
+		if (!event.getWorld().isRemote())
 		{
-			int dimension = event.getWorld().provider.getDimension();
+			int dimension = event.getWorld().getWorldInfo().getDimension();
 			ServerDecalStore.clearAllDecalsForDimension(dimension);
 		}
 	}
 
 	@SubscribeEvent
 	public static void onWorldLoad(WorldEvent.Load event) {
-		if (!event.getWorld().isRemote)
+		if (!event.getWorld().isRemote())
 		{
-			int dimension = event.getWorld().provider.getDimension();
+			int dimension = event.getWorld().getWorldInfo().getDimension();
 			ServerDecalStore.clearAllDecalsForDimension(dimension);
 		}
 	}

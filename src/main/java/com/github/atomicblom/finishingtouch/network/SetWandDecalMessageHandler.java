@@ -1,23 +1,43 @@
 package com.github.atomicblom.finishingtouch.network;
 
+import io.netty.buffer.ByteBuf;
+import net.minecraft.command.impl.TagCommand;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetHandlerPlayServer;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
+import java.util.function.Supplier;
 
-public class SetWandDecalMessageHandler implements IMessageHandler<SetWandDecalMessage, IMessage>
+public class SetWandDecalMessageHandler
 {
-	@Override
-	public IMessage onMessage(SetWandDecalMessage message, MessageContext ctx)
-	{
-		NetHandlerPlayServer serverHandler = ctx.getServerHandler();
-		InventoryPlayer inventory = serverHandler.player.inventory;
-		ItemStack currentItem = inventory.getCurrentItem();
-		currentItem.setTagCompound(message.getTagCompound());
-		inventory.markDirty();
 
-		return null;
+	public static SetWandDecalMessage fromBytes(ByteBuf buf)
+	{
+		PacketBuffer buffer = new PacketBuffer(buf);
+
+		NBTTagCompound tagCompound = buffer.readCompoundTag();
+		return new SetWandDecalMessage(tagCompound);
+
+	}
+
+	public static void toBytes(SetWandDecalMessage message, ByteBuf buf)
+	{
+		PacketBuffer buffer = new PacketBuffer(buf);
+		buffer.writeCompoundTag(message.tagCompound);
+	}
+
+	public static void handle(SetWandDecalMessage message, Supplier<NetworkEvent.Context> ctxSupplier)
+	{
+		NetworkEvent.Context ctx = ctxSupplier.get();
+		ctx.enqueueWork(() -> {
+			InventoryPlayer inventory = ctx.getSender().inventory;
+			ItemStack currentItem = inventory.getCurrentItem();
+			currentItem.setTag(message.getTagCompound());
+			inventory.markDirty();
+		});
+
+		ctx.setPacketHandled(true);
 	}
 }

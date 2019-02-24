@@ -2,7 +2,9 @@ package com.github.atomicblom.finishingtouch.decals;
 
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -49,41 +51,43 @@ public class Decal
 
 	public static Decal fromBytes(ByteBuf buf)
 	{
+		final PacketBuffer packetBuffer = new PacketBuffer(buf);
 		return new Decal(
 				new Vec3d(
-						buf.readDouble(),
-						buf.readDouble(),
-						buf.readDouble()
+						packetBuffer.readDouble(),
+						packetBuffer.readDouble(),
+						packetBuffer.readDouble()
 				),
-				EnumFacing.VALUES[buf.readByte()],
-				buf.readDouble(),
-				buf.readDouble(),
-                EnumDecalType.values()[buf.readInt()],
-				ByteBufUtils.readUTF8String(buf));
+				EnumFacing.byIndex(packetBuffer.readByte()),
+				packetBuffer.readDouble(),
+				packetBuffer.readDouble(),
+                EnumDecalType.values()[packetBuffer.readInt()],
+				packetBuffer.readString(32767));
 	}
 
 	public static void toBytes(ByteBuf buf, Decal decal)
 	{
-		buf.writeDouble(decal.origin.x);
-		buf.writeDouble(decal.origin.y);
-		buf.writeDouble(decal.origin.z);
-		buf.writeByte(decal.orientation.getIndex());
-		buf.writeDouble(decal.angle);
-		buf.writeDouble(decal.scale);
-		buf.writeInt(decal.type.ordinal());
-		ByteBufUtils.writeUTF8String(buf, decal.location);
+		final PacketBuffer packetBuffer = new PacketBuffer(buf);
+		packetBuffer.writeDouble(decal.origin.x);
+		packetBuffer.writeDouble(decal.origin.y);
+		packetBuffer.writeDouble(decal.origin.z);
+		packetBuffer.writeByte(decal.orientation.getIndex());
+		packetBuffer.writeDouble(decal.angle);
+		packetBuffer.writeDouble(decal.scale);
+		packetBuffer.writeInt(decal.type.ordinal());
+		packetBuffer.writeString(decal.location);
 	}
 
 	public static NBTTagCompound asNBT(Decal decal) {
 		final NBTTagCompound nbt = new NBTTagCompound();
-		nbt.setDouble(NBT.DecalOriginX, decal.origin.x);
-		nbt.setDouble(NBT.DecalOriginY, decal.origin.y);
-		nbt.setDouble(NBT.DecalOriginZ, decal.origin.z);
-		nbt.setByte(NBT.DecalOrientation, (byte)decal.orientation.getIndex());
-		nbt.setDouble(NBT.DecalAngle, decal.angle);
-		nbt.setDouble(NBT.DecalScale, decal.scale);
-		nbt.setByte(NBT.DecalType, (byte)decal.type.ordinal());
-		nbt.setString(NBT.DecalLocation, decal.location);
+		nbt.putDouble(NBT.DecalOriginX, decal.origin.x);
+		nbt.putDouble(NBT.DecalOriginY, decal.origin.y);
+		nbt.putDouble(NBT.DecalOriginZ, decal.origin.z);
+		nbt.putByte(NBT.DecalOrientation, (byte)decal.orientation.getIndex());
+		nbt.putDouble(NBT.DecalAngle, decal.angle);
+		nbt.putDouble(NBT.DecalScale, decal.scale);
+		nbt.putByte(NBT.DecalType, (byte)decal.type.ordinal());
+		nbt.putString(NBT.DecalLocation, decal.location);
 		return nbt;
 	}
 
@@ -95,7 +99,7 @@ public class Decal
 						nbt.getDouble(NBT.DecalOriginY),
 						nbt.getDouble(NBT.DecalOriginZ)
 				),
-				EnumFacing.VALUES[nbt.getByte(NBT.DecalOrientation)],
+				EnumFacing.byIndex(nbt.getByte(NBT.DecalOrientation)),
 				nbt.getDouble(NBT.DecalAngle),
 				nbt.getDouble(NBT.DecalScale),
 				EnumDecalType.values()[nbt.getByte(NBT.DecalType)],

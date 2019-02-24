@@ -15,6 +15,10 @@
       {
         "Name": "Turn Arrow (dilapidated)",
         "Location": "finishingtouch:textures/decals/turn_arrow_old"
+      },
+      {
+        "Name": "Hay Rorax (guess what)",
+        "Location": "finishingtouch:textures/decals/hay_rorax"
       }
     ]
   }

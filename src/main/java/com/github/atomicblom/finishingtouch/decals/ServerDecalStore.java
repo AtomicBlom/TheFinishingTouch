@@ -1,9 +1,11 @@
 package com.github.atomicblom.finishingtouch.decals;
 
-import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.storage.WorldInfo;
 import javax.annotation.Nullable;
 import java.util.Map;
 
@@ -13,14 +15,16 @@ public final class ServerDecalStore
 
 	private ServerDecalStore() {}
 
-	public static void addDecal(Chunk chunk, Decal decal)
+	public static void addDecal(IChunk chunk, Decal decal)
 	{
 		final DecalList decalList = getDecalsInChunk(chunk, true);
 		if (decalList == null) return;
 		//LogHelper.info("Decal added to server store: {}", decal);
 
 		decalList.add(decal);
-		chunk.markDirty();
+		//FIXME: Is this appropriate?
+		chunk.setLastSaveTime(0);
+		//chunk.markDirty();
 	}
 
 	public static void removeDecal(Chunk chunk, Decal decal)
@@ -33,34 +37,35 @@ public final class ServerDecalStore
 	}
 
 	@Nullable
-	public static DecalList getDecalsInChunk(Chunk chunk, boolean createIfNeccessary) {
+	public static DecalList getDecalsInChunk(IChunk chunk, boolean createIfNeccessary) {
 		if (chunk == null) return null;
 
-		final int dimension = chunk.getWorld().provider.getDimension();
+		IWorld worldForge = chunk.getWorldForge();
+		WorldInfo worldInfo = worldForge.getWorldInfo();
+		final int dimension = worldInfo.getDimension();
 
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> Maps.newHashMap());
 
-		final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
+		final ChunkPos chunkPos = chunk.getPos();
 
 		if (createIfNeccessary)
 		{
-			return dimensionChunkMap.computeIfAbsent(chunkPos, key -> {
+			return dimensionChunkMap.computeIfAbsent(chunkPos.asLong(), key -> {
 				//LogHelper.info("Created DecalList for {},{}", chunk.x, chunk.z);
-				return new DecalList(chunk.x, chunk.z);
+				return new DecalList(chunkPos.x, chunkPos.z);
 			});
 		} else {
-			return dimensionChunkMap.get(chunkPos);
+			return dimensionChunkMap.get(chunkPos.asLong());
 		}
 	}
 
-	public static void releaseChunk(Chunk chunk) {
-		final int dimension = chunk.getWorld().provider.getDimension();
+	public static void releaseChunk(IChunk chunk) {
+		final int dimension = chunk.getWorldForge().getWorldInfo().getDimension();
 
 		final Map<Long, DecalList> dimensionChunkMap = decalStore.get(dimension);
 		if (dimensionChunkMap != null)
 		{
-			final long chunkPos = ChunkPos.asLong(chunk.x, chunk.z);
-			dimensionChunkMap.remove(chunkPos);
+			dimensionChunkMap.remove(chunk.getPos().asLong());
 		}
 	}
 

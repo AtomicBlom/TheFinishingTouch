@@ -1,7 +1,6 @@
 package com.github.atomicblom.finishingtouch.gui;
 
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
-import com.github.atomicblom.finishingtouch.utility.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -23,7 +22,7 @@ class LooseTextureRenderableSlotType extends RenderableSlotTypeBase {
     @Override
     public void render(int renderX, int renderY, int width, int height)
     {
-        Minecraft.getMinecraft().getTextureManager().bindTexture(resourceLocation);
+        Minecraft.getInstance().getTextureManager().bindTexture(resourceLocation);
         if (!isTextureSizeKnown()) {
             setTextureSize(
                 GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH),

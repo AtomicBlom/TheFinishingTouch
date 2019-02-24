@@ -4,34 +4,53 @@ import com.github.atomicblom.finishingtouch.handlers.GuiHandler;
 import com.github.atomicblom.finishingtouch.network.*;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
+import com.sun.javafx.scene.traversal.ContainerTabOrder;
+import javafx.geometry.Side;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.event.EventNetworkChannel;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
+import org.apache.logging.log4j.LogManager;
 
-@Mod(modid = Reference.MOD_ID, name = Reference.NAME, version = Reference.VERSION)
+@Mod(Reference.MOD_ID)
 public class TheFinishingTouch
 {
-    public static final SimpleNetworkWrapper CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
-
-    @Instance
     public static TheFinishingTouch INSTANCE;
 
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
+    public TheFinishingTouch()
     {
-        //Configure Logging
-        LogHelper.setLog(event.getModLog());
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        INSTANCE = this;
+    }
 
-        //Configure Networking
-        CHANNEL.registerMessage(DecalMessageHandler.class, DecalMessage.class, 0, Side.SERVER);
-        CHANNEL.registerMessage(SendDecalEventToClientMessageHandler.class, SendDecalEventToClientMessage.class, 1, Side.CLIENT);
-        CHANNEL.registerMessage(SetWandDecalMessageHandler.class, SetWandDecalMessage.class, 2, Side.SERVER);
+    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(Reference.MOD_ID, "network"),
+            () -> "1.0",
+            "1.0"::equals,
+            "1.0"::equals
+            );
 
-        //Configure GUI handling
-        NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
+    private void setup(final FMLCommonSetupEvent event) {
+        LogHelper.setLog(LogManager.getLogger(Reference.MOD_ID));
+        CHANNEL.registerMessage(0, DecalMessage.class,
+                DecalMessageHandler::toBytes,
+                DecalMessageHandler::fromBytes,
+                DecalMessageHandler::handle
+        );
+
+        CHANNEL.registerMessage(1, SendDecalEventToClientMessage.class,
+                SendDecalEventToClientMessageHandler::toBytes,
+                SendDecalEventToClientMessageHandler::fromBytes,
+                SendDecalEventToClientMessageHandler::handle
+        );
+
+        CHANNEL.registerMessage(2, SetWandDecalMessage.class,
+                SetWandDecalMessageHandler::toBytes,
+                SetWandDecalMessageHandler::fromBytes,
+                SetWandDecalMessageHandler::handle
+        );
     }
 }

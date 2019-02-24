@@ -2,6 +2,7 @@ package com.github.atomicblom.finishingtouch.handlers;
 
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
+import javafx.geometry.Side;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -14,13 +15,13 @@ import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.opengl.GL11;
 
-@EventBusSubscriber(Side.CLIENT)
+@EventBusSubscriber(Dist.CLIENT)
 public final class DecalPreviewHandler
 {
 	private static final RenderHelp[] EnumFacingFixes = {
@@ -56,7 +57,7 @@ public final class DecalPreviewHandler
 			final double decalOffset = 0.04;
 
 			if (DecalPositioningHandler.getDecalType() == EnumDecalType.Loose) {
-				Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
+				Minecraft.getInstance().getTextureManager().bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
 			}
 
 			final double minX = origin.x - playerX + normal.getX() * decalOffset;
@@ -68,13 +69,13 @@ public final class DecalPreviewHandler
 			bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
 			GlStateManager.pushMatrix();
-			GlStateManager.pushAttrib();
-			GlStateManager.translate(minX, minY, minZ);
+			GlStateManager.pushLightingAttrib();
+			GlStateManager.translated(minX, minY, minZ);
 
 			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			GlStateManager.enableBlend();
 			GlStateManager.depthMask(false);
-			GlStateManager.color(1, 0, 0, 0.8f);
+			GlStateManager.color4f(1, 0, 0, 0.8f);
 			GlStateManager.enableTexture2D();
 
 			if (enumFixes.invertedRotation) {
@@ -82,19 +83,19 @@ public final class DecalPreviewHandler
 			}
 
 			final Axis axis = orientation.getAxis();
-			GlStateManager.rotate((float)(angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
+			GlStateManager.rotatef((float)(angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
 			switch (axis) {
 				case X:
-					GlStateManager.rotate(90, 0, 1, 0);
+					GlStateManager.rotatef(90, 0, 1, 0);
 					break;
 				case Y:
-					GlStateManager.rotate(90, 1, 0, 0);
+					GlStateManager.rotatef(90, 1, 0, 0);
 					break;
 			}
 			if (enumFixes.flipTexture) {
-				GlStateManager.rotate(180, 0, 1, 0);
+				GlStateManager.rotatef(180, 0, 1, 0);
 			}
-			GlStateManager.scale(scale, scale, scale);
+			GlStateManager.scaled(scale, scale, scale);
 
 			bufferbuilder.pos(0.5, 0.5, 0).tex(1, 1).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
 			bufferbuilder.pos(0.5, -0.5, 0).tex(1, 0).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
@@ -111,7 +112,7 @@ public final class DecalPreviewHandler
 		} else if (DecalPositioningHandler.isPlacing()) {
 			event.setCanceled(true);
 
-			final Minecraft minecraft = Minecraft.getMinecraft();
+			final Minecraft minecraft = Minecraft.getInstance();
 			final TextureManager textureManager = minecraft.getTextureManager();
 
 			final EnumFacing orientation = DecalPositioningHandler.getDecalOrientation();
@@ -136,11 +137,11 @@ public final class DecalPreviewHandler
 				textureManager.bindTexture(new ResourceLocation(DecalPositioningHandler.getDecalLocation()));
 			}
 
-			GlStateManager.pushAttrib();
+			GlStateManager.pushLightingAttrib();
 			GlStateManager.disableTexture2D();
 			GlStateManager.enableBlend();
 			GlStateManager.depthMask(true);
-			GlStateManager.glLineWidth(2.5f);
+			GlStateManager.lineWidth(2.5f);
 
 			final Tessellator tessellator = Tessellator.getInstance();
 			final BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -157,26 +158,26 @@ public final class DecalPreviewHandler
 			bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(minX, minY, minZ);
+			GlStateManager.translated(minX, minY, minZ);
 
 			if (enumFixes.invertedRotation) {
 				angle = -angle;
 			}
 
 			final Axis axis = orientation.getAxis();
-			GlStateManager.rotate((float)(angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
+			GlStateManager.rotatef((float)(angle - 45 - enumFixes.rotation), normal.getX(), normal.getY(), normal.getZ());
 			switch (axis) {
 				case X:
-					GlStateManager.rotate(90, 0, 1, 0);
+					GlStateManager.rotatef(90, 0, 1, 0);
 					break;
 				case Y:
-					GlStateManager.rotate(90, 1, 0, 0);
+					GlStateManager.rotatef(90, 1, 0, 0);
 					break;
 			}
 			if (enumFixes.flipTexture) {
-				GlStateManager.rotate(180, 0, 1, 0);
+				GlStateManager.rotatef(180, 0, 1, 0);
 			}
-			GlStateManager.scale(scale, scale, scale);
+			GlStateManager.scaled(scale, scale, scale);
 
 			bufferbuilder.pos(0.5, 0.5, 0).tex(1, 1).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
 			bufferbuilder.pos(0.5, -0.5, 0).tex(1, 0).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();

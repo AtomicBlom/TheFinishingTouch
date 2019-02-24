@@ -1,7 +1,7 @@
 package com.github.atomicblom.finishingtouch;
 
 import com.github.atomicblom.finishingtouch.utility.Reference;
-import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
+import net.minecraftforge.registries.ObjectHolder;
 import javax.annotation.Nonnull;
 
 @SuppressWarnings("ALL")

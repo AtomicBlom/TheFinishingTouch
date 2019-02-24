@@ -1,13 +1,11 @@
 package com.github.atomicblom.finishingtouch.network;
 
 import com.github.atomicblom.finishingtouch.decals.Decal;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-public class DecalMessage implements IMessage
+public class DecalMessage
 {
-	private Decal decal;
-	private DecalAction action;
+	Decal decal;
+	DecalAction action;
 
 	public DecalMessage(Decal decal, DecalAction action)
 	{
@@ -16,20 +14,6 @@ public class DecalMessage implements IMessage
 	}
 
 	public DecalMessage() {}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		action = buf.readBoolean() ? DecalAction.ADDING : DecalAction.REMOVING;
-		decal = Decal.fromBytes(buf);
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
-	{
-		buf.writeBoolean(action == DecalAction.ADDING);
-		Decal.toBytes(buf, decal);
-	}
 
 	public Decal getDecal()
 	{

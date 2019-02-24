@@ -1,13 +1,13 @@
 package com.github.atomicblom.finishingtouch;
 
 import com.github.atomicblom.finishingtouch.utility.Reference;
+import net.java.games.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.stats.StatBase;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
-import org.lwjgl.input.Keyboard;
 
 public class NonRegistryLibrary
 {
@@ -28,14 +28,15 @@ public class NonRegistryLibrary
 					return other == this || other == KeyConflictContext.IN_GAME;
 				}
 			},
-			Keyboard.KEY_LMENU,
+			InputMappings.getInputByName("key.keyboard.left.alt"),
 			"key.categories.gameplay");
 
 	//Statistics
-	public static final StatBase decalsAdded = new StatBase(Reference.Stats.DecalsAdded, new TextComponentTranslation(Reference.Language.DecalsAdded));
-	public static final StatBase decalsRemoved = new StatBase(Reference.Stats.DecalsRemoved, new TextComponentTranslation(Reference.Language.DecalsRemoved));
+	//FIXME: Reenable this
+	//public static final StatBase decalsAdded = new StatBase(Reference.Stats.DecalsAdded, new TextComponentTranslation(Reference.Language.DecalsAdded));
+	//public static final StatBase decalsRemoved = new StatBase(Reference.Stats.DecalsRemoved, new TextComponentTranslation(Reference.Language.DecalsRemoved));
 
 	//Minecraft keybinds
-	public static final KeyBinding keyBindUseItem = Minecraft.getMinecraft().gameSettings.keyBindUseItem;
-	public static final KeyBinding keyBindSneak = Minecraft.getMinecraft().gameSettings.keyBindSneak;
+	public static final KeyBinding keyBindUseItem = Minecraft.getInstance().gameSettings.keyBindUseItem;
+	public static final KeyBinding keyBindSneak = Minecraft.getInstance().gameSettings.keyBindSneak;
 }
