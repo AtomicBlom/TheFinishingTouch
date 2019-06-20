@@ -1,17 +1,13 @@
 package com.github.atomicblom.finishingtouch;
 
-import com.github.atomicblom.finishingtouch.handlers.GuiHandler;
 import com.github.atomicblom.finishingtouch.network.*;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference;
-import com.sun.javafx.scene.traversal.ContainerTabOrder;
-import javafx.geometry.Side;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.event.EventNetworkChannel;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 import org.apache.logging.log4j.LogManager;
 

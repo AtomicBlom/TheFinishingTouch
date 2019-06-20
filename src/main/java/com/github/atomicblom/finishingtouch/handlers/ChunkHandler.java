@@ -7,10 +7,10 @@ import com.github.atomicblom.finishingtouch.decals.ServerDecalStore;
 import com.github.atomicblom.finishingtouch.network.SendDecalEventToClientMessage;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
-import net.minecraft.nbt.INBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkDataEvent.Load;
@@ -27,17 +27,17 @@ public final class ChunkHandler
 {
 	@SubscribeEvent
 	public static void chunkLoad(Load event) {
-		final NBTTagCompound data = event.getData();
+		final CompoundNBT data = event.getData();
 		if (!data.contains(NBT.ChunkDecals)) return;
 
-		final NBTTagList tagList = data.getList(NBT.ChunkDecals, Constants.NBT.TAG_COMPOUND);
-		for (final INBTBase nbtBase : tagList) {
-			if (!(nbtBase instanceof NBTTagCompound)) {
+		final ListNBT tagList = data.getList(NBT.ChunkDecals, Constants.NBT.TAG_COMPOUND);
+		for (final INBT nbtBase : tagList) {
+			if (!(nbtBase instanceof CompoundNBT)) {
 				LogHelper.error("Wrong NBT Type serialized, not loading further decals from chunk");
 				return;
 			}
 
-			final Decal decal = Decal.fromNBT((NBTTagCompound) nbtBase);
+			final Decal decal = Decal.fromNBT((CompoundNBT) nbtBase);
 			ServerDecalStore.addDecal(event.getChunk(), decal);
 		}
 
@@ -57,7 +57,7 @@ public final class ChunkHandler
 		final DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(chunk, false);
 		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;
 
-		final NBTTagList decalData = new NBTTagList();
+		final ListNBT decalData = new ListNBT();
 		for (final Decal decal : decalsInChunk.decals) {
 			decalData.add(Decal.asNBT(decal));
 		}
@@ -76,7 +76,9 @@ public final class ChunkHandler
 
 	@SubscribeEvent
 	public static void chunkWatch(Watch event) {
-		final IChunk chunk = event.getChunk();
+		ChunkPos pos = event.getPos();
+		;
+		final IChunk chunk = event.getWorld().getChunk(pos.x, pos.z);
 		final DecalList decalsInChunk = ServerDecalStore.getDecalsInChunk(chunk, false);
 
 		if (decalsInChunk == null || decalsInChunk.decals.isEmpty()) return;

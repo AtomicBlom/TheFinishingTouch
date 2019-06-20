@@ -1,7 +1,7 @@
 package com.github.atomicblom.finishingtouch.utility;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -35,14 +35,14 @@ public final class PlaneProjection
 		}
 	}
 
-	public static Vec3d calculateProjectedPoint(Vec3d origin, EnumFacing decalOrientation, EntityPlayer player) {
+	public static Vec3d calculateProjectedPoint(Vec3d origin, Direction decalOrientation, PlayerEntity player) {
 		final Vec3d headPosition = getPlayerHeadPosition(player);
 		final Vec3d lookVector = getPlayerLookVector(player);
 
 		return intersectionLinePlane(headPosition, lookVector, origin, new Vec3d(decalOrientation.getDirectionVec()));
 	}
 
-	/*public static Vec3d calculateSlopeHit(BlockPos pos, EnumFacing blockFacing, EntityPlayer player)
+	/*public static Vec3d calculateSlopeHit(BlockPos pos, Direction blockFacing, EntityPlayer player)
 	{
 		final Vec3d headPosition = getPlayerHeadPosition(player);
 		final Vec3d lookVector = getPlayerLookVector(player);
@@ -124,7 +124,7 @@ public final class PlaneProjection
 
 	}*/
 
-	public static Vec3d getPlayerLookVector(EntityPlayer playerIn)
+	public static Vec3d getPlayerLookVector(PlayerEntity playerIn)
 	{
 		final float playerPitch = playerIn.rotationPitch;
 		final float playerYaw = playerIn.rotationYaw;
@@ -136,7 +136,7 @@ public final class PlaneProjection
 
 		final float lookX = yawSine * pitchCosine;
 		final float lookZ = yawCosine * pitchCosine;
-		final float playerReach = (float)playerIn.getAttribute(EntityPlayer.REACH_DISTANCE).getValue();
+		final float playerReach = (float)playerIn.getAttribute(PlayerEntity.REACH_DISTANCE).getValue();
 
 		final Vec3d lookVector = new Vec3d(
 				lookX * playerReach,
@@ -146,7 +146,7 @@ public final class PlaneProjection
 		return lookVector;
 	}
 
-	public static Vec3d getPlayerHeadPosition(EntityPlayer playerIn)
+	public static Vec3d getPlayerHeadPosition(PlayerEntity playerIn)
 	{
 		final Vec3d headPosition = new Vec3d(
 				playerIn.posX,

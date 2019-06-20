@@ -1,11 +1,9 @@
 package com.github.atomicblom.finishingtouch.network;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.command.impl.TagCommand;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.function.Supplier;
@@ -17,7 +15,7 @@ public class SetWandDecalMessageHandler
 	{
 		PacketBuffer buffer = new PacketBuffer(buf);
 
-		NBTTagCompound tagCompound = buffer.readCompoundTag();
+		CompoundNBT tagCompound = buffer.readCompoundTag();
 		return new SetWandDecalMessage(tagCompound);
 
 	}
@@ -32,7 +30,7 @@ public class SetWandDecalMessageHandler
 	{
 		NetworkEvent.Context ctx = ctxSupplier.get();
 		ctx.enqueueWork(() -> {
-			InventoryPlayer inventory = ctx.getSender().inventory;
+			PlayerInventory inventory = ctx.getSender().inventory;
 			ItemStack currentItem = inventory.getCurrentItem();
 			currentItem.setTag(message.getTagCompound());
 			inventory.markDirty();

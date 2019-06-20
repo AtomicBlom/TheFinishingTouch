@@ -8,19 +8,20 @@ import com.github.atomicblom.finishingtouch.utility.Reference;
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiConfirmOpenLink;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import org.apache.commons.lang3.NotImplementedException;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -29,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GuiDecalSelector extends GuiScreen {
+public class GuiDecalSelector extends Screen {
 
     private static final ResourceLocation DECAL_SELECTOR_TEXTURE = new ResourceLocation(Reference.MOD_ID, "textures/gui/decal_selector.png");
     private final ItemStack itemBeingEdited;
@@ -58,8 +59,8 @@ public class GuiDecalSelector extends GuiScreen {
     private RenderableSlot selectedDecal = null;
     private List<RenderableSlot> visibleDecalList = null;
 
-    public GuiDecalSelector(ItemStack itemBeingEdited)
-    {
+    public GuiDecalSelector(ItemStack itemBeingEdited) {
+        super(new TranslationTextComponent("decalselector"));
         this.itemBeingEdited = itemBeingEdited;
     }
 
@@ -67,15 +68,15 @@ public class GuiDecalSelector extends GuiScreen {
      * Adds the buttons (and other controls) to the screen in question. Called when the GUI is displayed and when the
      * window resizes, the buttonList is cleared beforehand.
      */
-    public void initGui()
+    public void init()
     {
-        super.initGui();
+        super.init();
         guiLeft = (width - xSize) / 2;
         guiTop = (height - ySize) / 2;
 
-        NBTTagCompound tagCompound = itemBeingEdited.getOrCreateTag();
+        CompoundNBT tagCompound = itemBeingEdited.getOrCreateTag();
         if (tagCompound == null) {
-            tagCompound = new NBTTagCompound();
+            tagCompound = new CompoundNBT();
             itemBeingEdited.setTag(tagCompound);
         }
         final String selectedDecalLocation = tagCompound.getString(NBT.DecalLocation);
@@ -179,7 +180,7 @@ public class GuiDecalSelector extends GuiScreen {
             final int renderX = (int)(slotOffsetX + mouseSlotX * (iconWidth + iconPadding));
             final int renderY = (int)(slotOffsetY + mouseSlotY * (iconHeight + iconPadding));
 
-            drawGradientRect(renderX, renderY, renderX + 16, renderY + 16, 0x80FFFFFF, 0x80FFFFFF);
+            fillGradient(renderX, renderY, renderX + 16, renderY + 16, 0x80FFFFFF, 0x80FFFFFF);
         }
     }
 
@@ -214,19 +215,19 @@ public class GuiDecalSelector extends GuiScreen {
 
     private void drawGuiContainerBackgroundLayer() {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
+        minecraft.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
         final int i = (width - xSize) / 2;
         final int j = (height - ySize) / 2;
-        drawTexturedModalRect(i, j, 0, 0, xSize, ySize);
+        blit(i, j, 0, 0, xSize, ySize);
     }
 
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
     {
-        mc.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
-        drawTexturedModalRect(82, 17, 0, 134, 138, 12);
-        drawTexturedModalRect(140, 11, 138, 134, 6, 13);
-        drawTexturedModalRect(137, 119, 144, 134, 6, 13);
-        drawTexturedModalRect(185, 119, 150, 134, 6, 13);
+        minecraft.getTextureManager().bindTexture(DECAL_SELECTOR_TEXTURE);
+        blit(82, 17, 0, 134, 138, 12);
+        blit(140, 11, 138, 134, 6, 13);
+        blit(137, 119, 144, 134, 6, 13);
+        blit(185, 119, 150, 134, 6, 13);
 
         if (selectedDecal != null) {
             float scale;
@@ -236,34 +237,34 @@ public class GuiDecalSelector extends GuiScreen {
             final String siteName = "§9" + selectedDecal.authorSiteName;
 
             GlStateManager.pushMatrix();
-            scale = fontRenderer.getStringWidth(decalName) > 80 ? 0.5f : 1f;
+            scale = font.getStringWidth(decalName) > 80 ? 0.5f : 1f;
             GlStateManager.scalef(scale, scale, scale);
-            fontRenderer.drawString(decalName, (int)(8 * (1/scale)), (int)(92 * (1/scale)), 4210752);
+            font.drawString(decalName, (int)(8 * (1/scale)), (int)(92 * (1/scale)), 4210752);
             GlStateManager.popMatrix();
 
             GlStateManager.pushMatrix();
-            scale = fontRenderer.getStringWidth(authorName) > 80 ? 0.5f : 1f;
+            scale = font.getStringWidth(authorName) > 80 ? 0.5f : 1f;
             GlStateManager.scalef(scale, scale, scale);
-            fontRenderer.drawString(authorName, (int)(8 * (1/scale)), (int)(102 * (1/scale)), 4210752);
+            font.drawString(authorName, (int)(8 * (1/scale)), (int)(102 * (1/scale)), 4210752);
             GlStateManager.popMatrix();
 
             GlStateManager.pushMatrix();
-            scale = fontRenderer.getStringWidth(siteName) > 80 ? 0.5f : 1f;
+            scale = font.getStringWidth(siteName) > 80 ? 0.5f : 1f;
             GlStateManager.scalef(scale, scale, scale);
-            fontRenderer.drawString(siteName, (int)(8 * (1/scale)), (int)(112 * (1/scale)), 0xFFFFFFFF);
+            font.drawString(siteName, (int)(8 * (1/scale)), (int)(112 * (1/scale)), 0xFFFFFFFF);
             GlStateManager.popMatrix();
 
             final RenderableSlotTypeBase renderableSlotType = selectedDecal.renderableSlotType;
             if (renderableSlotType.isTextureSizeKnown()) {
                 final String textureSize = renderableSlotType.getTextureWidth() + "x" + renderableSlotType.getTextureHeight();
-                final int textureSizeWidth = fontRenderer.getStringWidth(textureSize);
-                fontRenderer.drawString(textureSize, 78-textureSizeWidth, 80, 0xFFFFFFFF);
+                final int textureSizeWidth = font.getStringWidth(textureSize);
+                font.drawString(textureSize, 78-textureSizeWidth, 80, 0xFFFFFFFF);
             }
         }
 
-        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.included"), 86, 20, 0xFFFFFFFF);
-        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.community"), 158, 20, 0xFF808080);
-        fontRenderer.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.decallibrary"), 7, 6, 4210752);
+        font.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.included"), 86, 20, 0xFFFFFFFF);
+        font.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.community"), 158, 20, 0xFF808080);
+        font.drawString(I18n.format("gui."+Reference.MOD_ID + ".decal_selector.decallibrary"), 7, 6, 4210752);
     }
 
     @Override
@@ -284,9 +285,16 @@ public class GuiDecalSelector extends GuiScreen {
         if (mouseX < 7 || mouseX > 78) return false;
         if (mouseY < 109 || mouseY > 117) return false;
 
-        if (mc.gameSettings.chatLinksPrompt)
+        if (minecraft.gameSettings.chatLinksPrompt)
         {
-            mc.displayGuiScreen(new GuiConfirmOpenLink(this, selectedDecal.authorSiteName, -1, false));
+            minecraft.displayGuiScreen(new ConfirmOpenLinkScreen((trust) -> {
+                if (trust)
+                {
+                    openAuthorUrl();
+                }
+
+                minecraft.displayGuiScreen(this);
+            }, selectedDecal.authorSiteName, false));
         }
         else
         {
@@ -311,22 +319,6 @@ public class GuiDecalSelector extends GuiScreen {
         }
     }
 
-    @Override
-    public void confirmResult(boolean result, int id)
-    {
-        if (id == -1)
-        {
-            if (result)
-            {
-                openAuthorUrl();
-            }
-
-            mc.displayGuiScreen(this);
-        } else {
-            super.confirmResult(result, id);
-        }
-    }
-
     private boolean trySelectDecal(double mouseX, double mouseY)
     {
         final int totalDecals = visibleDecalList.size();
@@ -340,7 +332,7 @@ public class GuiDecalSelector extends GuiScreen {
         {
             selectedDecal = visibleDecalList.get(selectedItem);
 
-            final NBTTagCompound tagCompound = itemBeingEdited.getOrCreateTag();
+            final CompoundNBT tagCompound = itemBeingEdited.getOrCreateTag();
             tagCompound.putString(NBT.AuthorName, selectedDecal.authorName);
             tagCompound.putString(NBT.DecalName, selectedDecal.decalName);
             tagCompound.putInt(NBT.DecalType, selectedDecal.renderableSlotType.getType().ordinal());

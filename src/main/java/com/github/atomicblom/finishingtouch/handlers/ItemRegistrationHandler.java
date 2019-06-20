@@ -21,7 +21,7 @@ public class ItemRegistrationHandler
 	public static void onRegisterItems(Register<Item> event) {
 		IForgeRegistry<Item> registry = event.getRegistry();
 
-		final ItemGroup itemGroup = new ItemGroup("itemGroup." + Reference.MOD_ID + ".main") {
+		final ItemGroup itemGroup = new ItemGroup(Reference.MOD_ID + ".main") {
 			private ItemStack _stack = null;
 
 			@Override

@@ -1,11 +1,8 @@
 package com.github.atomicblom.finishingtouch;
 
-import com.github.atomicblom.finishingtouch.utility.Reference;
-import net.java.games.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 

@@ -1,18 +1,17 @@
 package com.github.atomicblom.finishingtouch.handlers;
 
+import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.DecalList;
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
-import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
-import javafx.geometry.Side;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumFacing.Axis;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
@@ -21,7 +20,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
-import static net.minecraftforge.fml.common.Mod.*;
+import static net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber(Dist.CLIENT)
 public final class WorldRenderHandler
@@ -29,7 +28,7 @@ public final class WorldRenderHandler
 	@SubscribeEvent
 	public static void onRenderWorldLastEvent(RenderWorldLastEvent event) {
 		final Minecraft minecraft = Minecraft.getInstance();
-		final EntityPlayerSP player = minecraft.player;
+		final ClientPlayerEntity player = minecraft.player;
 		final float partialTicks = event.getPartialTicks();
 
 		final double playerX = player.prevPosX + (player.posX - player.prevPosX) * partialTicks;
@@ -38,20 +37,20 @@ public final class WorldRenderHandler
 
 		final Iterable<DecalList> decalsAround = ClientDecalStore.getDecalsAround(player.dimension.getId(), player.getPosition());
 
-		GlStateManager.pushLightingAttrib();
+		GlStateManager.pushLightingAttributes();
 		GlStateManager.disableBlend();
 		GlStateManager.enableAlphaTest();
 		GlStateManager.depthMask(false);
-		GlStateManager.resetColor();
-		GlStateManager.enableTexture2D();
+		GlStateManager.clearCurrentColor();
+		GlStateManager.enableTexture();
 
-		final RenderHelp[] EnumFacingFixes = {
-				new RenderHelp(EnumFacing.DOWN, 0, false, true),
-				new RenderHelp(EnumFacing.UP, 0, true, false),
-				new RenderHelp(EnumFacing.NORTH, 90, false, false),
-				new RenderHelp(EnumFacing.SOUTH, -90, true, true),
-				new RenderHelp(EnumFacing.WEST, -90, true, false),
-				new RenderHelp(EnumFacing.EAST, 90  , false, true),
+		final RenderHelp[] DirectionFixes = {
+				new RenderHelp(Direction.DOWN, 0, false, true),
+				new RenderHelp(Direction.UP, 0, true, false),
+				new RenderHelp(Direction.NORTH, 90, false, false),
+				new RenderHelp(Direction.SOUTH, -90, true, true),
+				new RenderHelp(Direction.WEST, -90, true, false),
+				new RenderHelp(Direction.EAST, 90  , false, true),
 		};
 
 		for (final DecalList decalList : decalsAround)
@@ -62,8 +61,8 @@ public final class WorldRenderHandler
 					minecraft.getTextureManager().bindTexture(new ResourceLocation(decal.getLocation()));
 				}
 
-				final EnumFacing orientation = decal.getOrientation();
-				final RenderHelp enumFixes = EnumFacingFixes[orientation.getIndex()];
+				final Direction orientation = decal.getOrientation();
+				final RenderHelp enumFixes = DirectionFixes[orientation.getIndex()];
 
 				final Vec3d origin = decal.getOrigin();
 				double angle = decal.getAngle();
@@ -117,6 +116,6 @@ public final class WorldRenderHandler
 			}
 		}
 
-		GlStateManager.popAttrib();
+		GlStateManager.popAttributes();
 	}
 }

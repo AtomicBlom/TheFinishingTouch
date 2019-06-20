@@ -1,9 +1,9 @@
 package com.github.atomicblom.finishingtouch.decals;
 
+import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.storage.WorldInfo;
 import javax.annotation.Nullable;
@@ -19,7 +19,7 @@ public final class ServerDecalStore
 	{
 		final DecalList decalList = getDecalsInChunk(chunk, true);
 		if (decalList == null) return;
-		//LogHelper.info("Decal added to server store: {}", decal);
+		LogHelper.info("Decal added to server store: {}", decal);
 
 		decalList.add(decal);
 		//FIXME: Is this appropriate?
@@ -27,13 +27,13 @@ public final class ServerDecalStore
 		//chunk.markDirty();
 	}
 
-	public static void removeDecal(Chunk chunk, Decal decal)
+	public static void removeDecal(IChunk chunk, Decal decal)
 	{
 		final DecalList decalList = getDecalsInChunk(chunk, false);
 		if (decalList == null) return;
-		//LogHelper.info("Decal removed from server store: {}", decal);
+		LogHelper.info("Decal removed from server store: {}", decal);
 		decalList.decals.removeIf(decalInList -> decalInList.Is(decal));
-		chunk.markDirty();
+		chunk.setLastSaveTime(0);
 	}
 
 	@Nullable
@@ -51,7 +51,7 @@ public final class ServerDecalStore
 		if (createIfNeccessary)
 		{
 			return dimensionChunkMap.computeIfAbsent(chunkPos.asLong(), key -> {
-				//LogHelper.info("Created DecalList for {},{}", chunk.x, chunk.z);
+				LogHelper.info("Created DecalList for {},{}", chunkPos.x, chunkPos.z);
 				return new DecalList(chunkPos.x, chunkPos.z);
 			});
 		} else {

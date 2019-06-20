@@ -5,8 +5,7 @@ import com.github.atomicblom.finishingtouch.decals.ClientDecalStore;
 import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -47,7 +46,7 @@ public final class SendDecalEventToClientMessageHandler
 	{
 		NetworkEvent.Context ctx = ctxSupplier.get();
 		ctx.enqueueWork(() -> {
-			EntityPlayerSP player = Minecraft.getInstance().player;
+			ClientPlayerEntity player = Minecraft.getInstance().player;
 			World world = player.world;
 			if (world.getWorldInfo().getDimension() != message.dimension) return;
 

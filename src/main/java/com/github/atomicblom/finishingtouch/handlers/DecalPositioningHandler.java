@@ -11,16 +11,15 @@ import com.github.atomicblom.finishingtouch.network.DecalAction;
 import com.github.atomicblom.finishingtouch.network.DecalMessage;
 import com.github.atomicblom.finishingtouch.utility.PlaneProjection;
 import com.github.atomicblom.finishingtouch.utility.Reference;
-import javafx.geometry.Side;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumFacing.Axis;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -32,13 +31,13 @@ import javax.annotation.Nullable;
 @EventBusSubscriber(Dist.CLIENT)
 public final class DecalPositioningHandler
 {
-	private static EntityPlayerSP player = null;
+	private static ClientPlayerEntity player = null;
 	private static final Minecraft minecraft = Minecraft.getInstance();
 
 	private static boolean isPlacing = false;
 	private static boolean isRemoving = false;
 
-	private static EnumFacing orientation = EnumFacing.UP;
+	private static Direction orientation = Direction.UP;
 
 	private static Vec3d origin = Vec3d.ZERO;
 	private static Vec3d placeReference = Vec3d.ZERO;
@@ -55,7 +54,7 @@ public final class DecalPositioningHandler
 		return isPlacing && placeReference != null;
 	}
 
-	public static EnumFacing getDecalOrientation() {
+	public static Direction getDecalOrientation() {
 		return orientation;
 	}
 
@@ -89,7 +88,7 @@ public final class DecalPositioningHandler
 		}
 
 		final RayTraceResult objectMouseOver = minecraft.objectMouseOver;
-		final NBTTagCompound wandNBT = player.getHeldItemMainhand().getTag();
+		final CompoundNBT wandNBT = player.getHeldItemMainhand().getTag();
 
 		final boolean isRequestingDecalAction = NonRegistryLibrary.keyBindUseItem.isKeyDown();
 		final boolean isRequestingRemoveDecal = NonRegistryLibrary.removeDecalBinding.isKeyDown();
@@ -118,10 +117,11 @@ public final class DecalPositioningHandler
 		} else {
 			final boolean hasDecal = wandNBT != null && !wandNBT.isEmpty();
 
-			if (!isPlacing && isRequestingDecalAction && objectMouseOver.type == Type.BLOCK)
+			if (!isPlacing && isRequestingDecalAction && objectMouseOver.getType() == Type.BLOCK)
 			{
-				orientation = objectMouseOver.sideHit;
-				origin = objectMouseOver.hitVec;
+				BlockRayTraceResult blockMouseOver = (BlockRayTraceResult)objectMouseOver;
+				orientation = blockMouseOver.getFace();
+				origin = blockMouseOver.getHitVec();
 				if (hasDecal)
 				{
 					decalLocation = wandNBT.getString(Reference.NBT.DecalLocation);
@@ -130,7 +130,7 @@ public final class DecalPositioningHandler
 				} else {
 
 					minecraft.ingameGUI.setOverlayMessage(
-							new TextComponentTranslation("gui.finishingtouch.decal_wand.howtoopen"), false
+							new TranslationTextComponent("gui.finishingtouch.decal_wand.howtoopen"), false
 					);
 				}
 			}
@@ -153,19 +153,22 @@ public final class DecalPositioningHandler
 
 	private static Decal checkHighlightedDecal(RayTraceResult objectMouseOver, Decal currentlyHighligtedDecal)
 	{
-		if (currentlyHighligtedDecal != null && checkDecalHit(objectMouseOver, currentlyHighligtedDecal)) {
+		if (objectMouseOver.getType() != Type.BLOCK) return currentlyHighligtedDecal;
+		BlockRayTraceResult blockRayTrace = (BlockRayTraceResult)objectMouseOver;
+
+		if (currentlyHighligtedDecal != null && checkDecalHit(blockRayTrace, currentlyHighligtedDecal)) {
 			return currentlyHighligtedDecal;
 		}
 
-		final ChunkPos chunkPos = new ChunkPos(objectMouseOver.getBlockPos());
+		final ChunkPos chunkPos = new ChunkPos(blockRayTrace.getPos());
 
-		Decal hitDecal = checkDecalsInChunk(chunkPos.x, chunkPos.z, objectMouseOver);
+		Decal hitDecal = checkDecalsInChunk(chunkPos.x, chunkPos.z, blockRayTrace);
 		if (hitDecal != null) return hitDecal;
 
 		for (int z = -1; z <= 1; ++z) {
 			for (int x = -1; x <= 1; ++x) {
 				if (z == 0 && x == 0) continue;
-				hitDecal = checkDecalsInChunk(x, z, objectMouseOver);
+				hitDecal = checkDecalsInChunk(x, z, blockRayTrace);
 				if (hitDecal != null) return hitDecal;
 			}
 		}
@@ -173,21 +176,22 @@ public final class DecalPositioningHandler
 		return hitDecal;
 	}
 
-	private static boolean checkDecalHit(RayTraceResult raytrace, Decal decal)
+	private static boolean checkDecalHit(BlockRayTraceResult raytrace, Decal decal)
 	{
-		if (decal.getOrientation() != raytrace.sideHit) return false;
+
+		if (decal.getOrientation() != raytrace.getFace()) return false;
 		final Vec3d pointOnPlane = PlaneProjection.calculateProjectedPoint(origin, orientation, player);
 //		LogHelper.info("Checking removal of decal: {}", decal);
 //		LogHelper.info("Point on plane: {}", pointOnPlane);
 		if (pointOnPlane != null) {
-			if (pointOnPlane.distanceTo(raytrace.hitVec) < decal.getScale()) {
+			if (pointOnPlane.distanceTo(raytrace.getHitVec()) < decal.getScale()) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private static Decal checkDecalsInChunk(int x, int z, RayTraceResult raytrace)
+	private static Decal checkDecalsInChunk(int x, int z, BlockRayTraceResult raytrace)
 	{
 		final Chunk chunkFromChunkCoords = player.world.getChunk(x, z);
 		final DecalList decalsInChunk = ClientDecalStore.getDecalsInChunk(chunkFromChunkCoords);
@@ -255,7 +259,7 @@ public final class DecalPositioningHandler
 	}
 
 	private static void removeDecal() {
-		minecraft.addScheduledTask(
+		minecraft.deferTask(
 				() -> TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
 						decalToRemove,
 						DecalAction.REMOVING
@@ -264,7 +268,7 @@ public final class DecalPositioningHandler
 
 	private static void finalizeDecal()
 	{
-		minecraft.addScheduledTask(
+		minecraft.deferTask(
 				() -> {
 					TheFinishingTouch.CHANNEL.sendToServer(new DecalMessage(
 							new Decal(

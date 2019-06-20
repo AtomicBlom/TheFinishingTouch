@@ -1,10 +1,10 @@
 package com.github.atomicblom.finishingtouch.network;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 
 public class SetWandDecalMessage
 {
-	public SetWandDecalMessage(NBTTagCompound tagCompound)
+	public SetWandDecalMessage(CompoundNBT tagCompound)
 	{
 		this.tagCompound = tagCompound;
 	}
@@ -13,9 +13,9 @@ public class SetWandDecalMessage
 	{
 	}
 
-	NBTTagCompound tagCompound;
+	CompoundNBT tagCompound;
 
-	public NBTTagCompound getTagCompound()
+	public CompoundNBT getTagCompound()
 	{
 		return tagCompound;
 	}

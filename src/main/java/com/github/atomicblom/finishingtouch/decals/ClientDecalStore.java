@@ -3,7 +3,9 @@ package com.github.atomicblom.finishingtouch.decals;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import com.google.common.collect.Maps;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.EmptyChunk;
 import java.util.ArrayList;
 import java.util.Map;
@@ -16,13 +18,14 @@ public final class ClientDecalStore
 
 	public static void addDecal(Chunk chunk, Decal decal)
 	{
-		int chunkX = chunk.x;
-		int chunkZ = chunk.z;
+		ChunkPos pos = chunk.getPos();
+		int chunkX = pos.x;
+		int chunkZ = pos.z;
 
 		if (chunk instanceof EmptyChunk) {
 			chunkX = ((int)decal.getOrigin().x) >> 4;
 			chunkZ = ((int)decal.getOrigin().z) >> 4;
-		} else if (!chunk.isLoaded()) return;
+		} else if (!chunk.getStatus().isAtLeast(ChunkStatus.FULL)) return;
 
 		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 
@@ -38,13 +41,14 @@ public final class ClientDecalStore
 
 	public static void removeDecal(Chunk chunk, Decal decal)
 	{
-		int chunkX = chunk.x;
-		int chunkZ = chunk.z;
+		ChunkPos pos = chunk.getPos();
+		int chunkX = pos.x;
+		int chunkZ = pos.z;
 
 		if (chunk instanceof EmptyChunk) {
 			chunkX = ((int)decal.getOrigin().x) >> 4;
 			chunkZ = ((int)decal.getOrigin().z) >> 4;
-		} else if (!chunk.isLoaded()) return;
+		} else if (!chunk.getStatus().isAtLeast(ChunkStatus.FULL)) return;
 
 		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 
@@ -58,11 +62,12 @@ public final class ClientDecalStore
 	}
 
 	public static DecalList getDecalsInChunk(Chunk chunk) {
-		if (!chunk.isLoaded()) return null;
+		if (!chunk.getStatus().isAtLeast(ChunkStatus.FULL)) return null;
 
+		ChunkPos pos = chunk.getPos();
 		final int dimension = chunk.getWorld().getWorldInfo().getDimension();
 		final ClientDimensionDecals dimensionChunkMap = decalStore.computeIfAbsent(dimension, k -> new ClientDimensionDecals());
-		return dimensionChunkMap.getDecalListForChunk(chunk.x, chunk.z);
+		return dimensionChunkMap.getDecalListForChunk(pos.x, pos.z);
 	}
 
 	public static Iterable<DecalList> getDecalsAround(int dimension, BlockPos position)

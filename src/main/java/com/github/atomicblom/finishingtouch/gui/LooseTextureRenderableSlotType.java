@@ -1,9 +1,9 @@
 package com.github.atomicblom.finishingtouch.gui;
 
 import com.github.atomicblom.finishingtouch.decals.EnumDecalType;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
@@ -25,8 +25,8 @@ class LooseTextureRenderableSlotType extends RenderableSlotTypeBase {
         Minecraft.getInstance().getTextureManager().bindTexture(resourceLocation);
         if (!isTextureSizeKnown()) {
             setTextureSize(
-                GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH),
-                GlStateManager.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT)
+                GlStateManager.getTexLevelParameter(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH),
+                GlStateManager.getTexLevelParameter(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_HEIGHT)
             );
         }
 

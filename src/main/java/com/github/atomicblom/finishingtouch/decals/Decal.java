@@ -3,9 +3,9 @@ package com.github.atomicblom.finishingtouch.decals;
 import com.github.atomicblom.finishingtouch.utility.Reference.NBT;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -13,13 +13,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class Decal
 {
 	private final Vec3d origin;
-	private final EnumFacing orientation;
+	private final Direction orientation;
 	private final double angle;
 	private final double scale;
 	private final EnumDecalType type;
 	private final String location;
 
-	public Decal(Vec3d origin, EnumFacing orientation, double angle, double scale, EnumDecalType decalType, String decalLocation)
+	public Decal(Vec3d origin, Direction orientation, double angle, double scale, EnumDecalType decalType, String decalLocation)
 	{
 		this.origin = origin;
 		this.orientation = orientation;
@@ -34,7 +34,7 @@ public class Decal
 		return origin;
 	}
 
-	public EnumFacing getOrientation()
+	public Direction getOrientation()
 	{
 		return orientation;
 	}
@@ -58,7 +58,7 @@ public class Decal
 						packetBuffer.readDouble(),
 						packetBuffer.readDouble()
 				),
-				EnumFacing.byIndex(packetBuffer.readByte()),
+				Direction.byIndex(packetBuffer.readByte()),
 				packetBuffer.readDouble(),
 				packetBuffer.readDouble(),
                 EnumDecalType.values()[packetBuffer.readInt()],
@@ -78,8 +78,8 @@ public class Decal
 		packetBuffer.writeString(decal.location);
 	}
 
-	public static NBTTagCompound asNBT(Decal decal) {
-		final NBTTagCompound nbt = new NBTTagCompound();
+	public static CompoundNBT asNBT(Decal decal) {
+		final CompoundNBT nbt = new CompoundNBT();
 		nbt.putDouble(NBT.DecalOriginX, decal.origin.x);
 		nbt.putDouble(NBT.DecalOriginY, decal.origin.y);
 		nbt.putDouble(NBT.DecalOriginZ, decal.origin.z);
@@ -91,7 +91,7 @@ public class Decal
 		return nbt;
 	}
 
-	public static Decal fromNBT(NBTTagCompound nbt) {
+	public static Decal fromNBT(CompoundNBT nbt) {
 
 		return new Decal(
 				new Vec3d(
@@ -99,7 +99,7 @@ public class Decal
 						nbt.getDouble(NBT.DecalOriginY),
 						nbt.getDouble(NBT.DecalOriginZ)
 				),
-				EnumFacing.byIndex(nbt.getByte(NBT.DecalOrientation)),
+				Direction.byIndex(nbt.getByte(NBT.DecalOrientation)),
 				nbt.getDouble(NBT.DecalAngle),
 				nbt.getDouble(NBT.DecalScale),
 				EnumDecalType.values()[nbt.getByte(NBT.DecalType)],

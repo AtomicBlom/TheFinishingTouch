@@ -5,9 +5,11 @@ import com.github.atomicblom.finishingtouch.decals.Decal;
 import com.github.atomicblom.finishingtouch.decals.ServerDecalStore;
 import com.github.atomicblom.finishingtouch.utility.LogHelper;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 import java.util.function.Supplier;
@@ -32,12 +34,12 @@ public class DecalMessageHandler
 	{
 		final Context ctx = ctxSupplier.get();
 		ctx.enqueueWork(() -> {
-			EntityPlayerMP player = ctx.getSender();
+			ServerPlayerEntity player = ctx.getSender();
 			World world = player.world;
-			Chunk chunk = world.getChunk(player.getPosition());
+			IChunk chunk = world.getChunk(player.getPosition());
 			Decal decal = message.getDecal();
 			DecalAction action = message.getAction();
-			if (chunk.isLoaded()) {
+			if (chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
 				if (action == DecalAction.ADDING)
 				{
 					ServerDecalStore.addDecal(chunk, decal);
